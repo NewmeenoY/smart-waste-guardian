@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ผู้พิทักษ์การคัดแยกขยะอัจฉริยะ (Smart Waste Guardian)</title>
+    <!-- โหลดไลบรารีที่จำเป็น -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- เพิ่มไลบรารี Firebase SDK (เวอร์ชัน 8 ใช้งานง่ายสุดสำหรับ HTML) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
     <style>
         body { font-family: 'Kanit', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
@@ -24,7 +24,7 @@
         @media print { body { background: white; color: black; } #viewAdmin header, .print-hide, #admin-settings { display: none !important; } #viewAdmin { min-height: auto; } .shadow-sm, .border { box-shadow: none; border: 1px solid #ddd; } }
     </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen selection:bg-emerald-500 selection:text-white">
+<body class="bg-slate-900 text-white min-h-screen selection:bg-emerald-500 selection:text-white relative">
 
     <!-- 1. Gateway -->
     <div id="viewGateway" class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
@@ -32,18 +32,16 @@
             <h1 class="text-4xl md:text-5xl font-bold text-emerald-400 mb-2">Smart Waste Guardian</h1>
             <h2 class="text-2xl font-semibold mb-4">ผู้พิทักษ์การคัดแยกขยะอัจฉริยะ</h2>
             <p class="text-slate-400 mb-2">จัดทำโดย วิทยาลัยสารพัดช่างบรรหาร-แจ่มใส จังหวัดสุพรรณบุรี</p>
-            <span id="dbStatusBadge" class="inline-block bg-slate-700 text-slate-300 text-xs px-3 py-1 rounded-full">สถานะฐานข้อมูล: Local Storage (ไม่ได้ซิงค์)</span>
+            <span id="dbStatusBadge" class="inline-block bg-slate-700 text-slate-300 text-xs px-3 py-1 rounded-full">สถานะฐานข้อมูล: กำลังเชื่อมต่อ...</span>
         </div>
         <div class="flex flex-col md:flex-row gap-4 w-full max-w-2xl justify-center">
             <button onclick="switchView('kiosk')" class="flex-1 glass p-8 rounded-2xl hover:bg-emerald-600/20 transition border-emerald-500/30 group">
                 <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">♻️</div>
                 <h3 class="text-xl font-bold text-emerald-400">เข้าสู่โหมดหน้าตู้ (Kiosk)</h3>
-                <p class="text-sm text-slate-400 mt-2">สำหรับจุดสแกนและคัดแยกขยะ</p>
             </button>
             <button onclick="showAdminLogin()" class="flex-1 glass p-8 rounded-2xl hover:bg-blue-600/20 transition border-blue-500/30 group">
                 <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">📊</div>
                 <h3 class="text-xl font-bold text-blue-400">ระบบจัดการหลังบ้าน (Admin)</h3>
-                <p class="text-sm text-slate-400 mt-2">สำหรับผู้ดูแลระบบและดูสถิติ</p>
             </button>
         </div>
     </div>
@@ -76,7 +74,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="font-semibold text-lg flex items-center gap-2">
                             <span id="aiStatusDot" class="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></span>
-                            <span id="aiStatusText" class="transition-colors duration-300">กำลังเตรียมระบบ...</span>
+                            <span id="aiStatusText" class="transition-colors duration-300 font-bold">กำลังเตรียมระบบ...</span>
                         </h2>
                     </div>
                     
@@ -106,14 +104,22 @@
         </main>
     </div>
 
+    <!-- Modal: ถังขยะเต็ม (แจ้งเตือน) -->
+    <div id="binFullModal" class="fixed inset-0 bg-red-900/95 z-[60] flex flex-col items-center justify-center hide backdrop-blur-md">
+        <div class="text-8xl mb-6 animate-pulse">⚠️</div>
+        <h2 id="binFullText" class="text-4xl md:text-5xl font-bold text-white mb-4 text-center px-4 drop-shadow-lg">ถังขยะเต็มแล้ว!</h2>
+        <p class="text-red-200 text-xl mb-8 font-semibold">กรุณาติดต่อเจ้าหน้าที่เพื่อเคลียร์ขยะ</p>
+        <button onclick="switchView('gateway')" class="px-8 py-4 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold border border-white/50 transition">กลับหน้าหลัก</button>
+    </div>
+
     <!-- Modal: รอเชื่อมต่อ ESP32 -->
     <div id="espWaitModal" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center hide">
         <div class="w-20 h-20 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-8"></div>
         <h2 class="text-3xl md:text-4xl font-bold text-emerald-400 mb-4 text-center px-4">กำลังรอการเชื่อมต่อจาก ESP32...</h2>
         <p class="text-slate-400 text-lg mb-8">เป้าหมาย IP: <span id="waitEspIp" class="text-emerald-300 font-mono font-bold"></span></p>
         <div class="flex gap-4">
-            <button onclick="switchView('gateway')" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold transition">กลับหน้าหลัก</button>
-            <button onclick="forceStartKiosk()" class="px-6 py-3 bg-emerald-900/50 hover:bg-emerald-800 text-emerald-400 rounded-xl font-semibold border border-emerald-700 transition">ข้ามการเชื่อมต่อ (ทดสอบ)</button>
+            <button onclick="switchView('gateway')" class="px-6 py-3 bg-slate-700 rounded-xl font-semibold">กลับหน้าหลัก</button>
+            <button onclick="forceStartKiosk()" class="px-6 py-3 bg-emerald-900/50 text-emerald-400 rounded-xl font-semibold border border-emerald-700">ข้ามการเชื่อมต่อ</button>
         </div>
     </div>
 
@@ -122,9 +128,7 @@
         <div class="text-8xl mb-6 animate-bounce" id="binIcon">🗑️</div>
         <h2 class="text-3xl font-bold text-emerald-400 mb-2" id="binTitle">กำลังเปิดฝาถัง...</h2>
         <p class="text-xl text-slate-300">กรุณาทิ้งขยะลงถัง</p>
-        <div class="w-64 h-2 bg-slate-800 rounded-full mt-8 overflow-hidden">
-            <div class="h-full bg-emerald-500 w-full origin-left animate-[shrink_4s_linear]"></div>
-        </div>
+        <div class="w-64 h-2 bg-slate-800 rounded-full mt-8 overflow-hidden"><div class="h-full bg-emerald-500 w-full origin-left animate-[shrink_4s_linear]"></div></div>
     </div>
 
     <!-- Modal: สะสมแต้ม -->
@@ -137,8 +141,8 @@
                 <div id="studentFoundBadge" class="bg-emerald-900/30 border border-emerald-500/30 text-emerald-400 p-3 rounded-xl text-center text-sm hide">ยินดีต้อนรับ, <strong id="claimStudentNameDisplay">ชื่อ</strong></div>
                 <div id="studentNotFoundBadge" class="bg-red-900/30 border border-red-500/30 text-red-400 p-3 rounded-xl text-center text-sm hide">⚠️ ไม่มีข้อมูลในระบบ</div>
                 <div class="flex gap-2 pt-2">
-                    <button onclick="skipClaim()" class="flex-1 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold text-slate-300">ไม่เป็นไร (ข้าม)</button>
-                    <button id="btnSubmitClaim" onclick="submitClaim()" class="flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed transition" disabled>รับแต้ม</button>
+                    <button onclick="skipClaim()" class="flex-1 py-3 rounded-xl bg-slate-700 font-semibold text-slate-300">ข้าม</button>
+                    <button id="btnSubmitClaim" onclick="submitClaim()" class="flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed" disabled>รับแต้ม</button>
                 </div>
             </div>
             <p class="text-center text-xs text-slate-500 mt-4">ปิดอัตโนมัติใน <span id="claimCountdown">15</span> วินาที</p>
@@ -148,10 +152,9 @@
     <!-- 3. โหมด Admin -->
     <div id="viewAdmin" class="hide min-h-screen bg-gray-50 text-slate-800">
         <header class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
-            <h1 class="text-xl font-bold text-emerald-600">Smart Waste Guardian | Admin Dashboard</h1>
+            <h1 class="text-xl font-bold text-emerald-600">Smart Waste Guardian | Admin</h1>
             <div class="flex gap-3 print-hide">
-                <button onclick="window.print()" class="text-sm bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg transition">🖨️ พิมพ์ PDF</button>
-                <button onclick="switchView('gateway')" class="text-sm bg-slate-800 text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition">ออกจากระบบ</button>
+                <button onclick="switchView('gateway')" class="text-sm bg-slate-800 text-white px-4 py-2 rounded-lg">ออกจากระบบ</button>
             </div>
         </header>
 
@@ -167,45 +170,45 @@
                 <!-- Dashboard Tab -->
                 <div id="admin-dashboard" class="space-y-6">
                     <div class="flex justify-between items-center gap-4">
-                        <h2 class="text-2xl font-bold">สถิติและรายงานผล (Real-time)</h2>
-                        <select id="timeFilter" onchange="renderAdmin()" class="border border-gray-300 rounded-lg px-4 py-2 bg-white print-hide">
+                        <h2 class="text-2xl font-bold">สถิติและรายงานผล</h2>
+                        <select id="timeFilter" onchange="renderAdmin()" class="border rounded-lg px-4 py-2 bg-white outline-none">
                             <option value="all">ทั้งหมด</option><option value="day">วันนี้</option><option value="month">เดือนนี้</option>
                         </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="border rounded-xl p-4 flex flex-col items-center bg-gray-50"><h3 class="font-semibold text-gray-600 mb-2">สัดส่วนขยะ</h3><canvas id="statChart" class="max-h-48"></canvas></div>
-                        <div class="border rounded-xl p-4 md:col-span-2 bg-gray-50"><h3 class="font-semibold text-gray-600 mb-2">แต้มสะสมแยกตามแผนก</h3><canvas id="deptChart" class="max-h-48 w-full"></canvas></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 flex justify-between items-center">
-                            <div><p class="text-sm text-emerald-600 font-medium">ขยะรีไซเคิลรวม (ชิ้น)</p><p id="statRecycle" class="text-3xl font-bold text-emerald-700 mt-1">0</p></div><div class="text-4xl">♻️</div>
-                        </div>
-                        <div class="bg-amber-50 rounded-xl p-4 border border-amber-100 flex justify-between items-center">
-                            <div><p class="text-sm text-amber-600 font-medium">ขยะทั่วไปรวม (ชิ้น)</p><p id="statGeneral" class="text-3xl font-bold text-amber-700 mt-1">0</p></div><div class="text-4xl">🗑️</div>
-                        </div>
+                        <div class="border rounded-xl p-4 flex flex-col items-center bg-gray-50"><canvas id="statChart" class="max-h-48"></canvas></div>
+                        <div class="border rounded-xl p-4 md:col-span-2 bg-gray-50"><canvas id="deptChart" class="max-h-48 w-full"></canvas></div>
                     </div>
                 </div>
 
-                <!-- Database Tab -->
+                <!-- Database Tab (พร้อมระบบ Excel) -->
                 <div id="admin-database" class="hide space-y-6">
-                    <div class="flex justify-between items-center gap-4">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                         <h2 class="text-2xl font-bold">ฐานข้อมูลนักศึกษา</h2>
-                        <div class="flex gap-2 print-hide">
+                        
+                        <!-- ชุดปุ่มจัดการ Excel และเพิ่มคน -->
+                        <div class="flex flex-wrap gap-2 print-hide">
+                            <button onclick="downloadTemplate()" class="bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📄 โหลดไฟล์ต้นแบบ</button>
+                            
                             <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" class="hidden" onchange="importExcel(event)">
-                            <button onclick="document.getElementById('excelUpload').click()" class="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm">📥 นำเข้า Excel</button>
-                            <button onclick="exportExcel()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">📤 ส่งออก Excel</button>
-                            <button onclick="toggleAddStudentForm()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm">+ เพิ่มนักศึกษา</button>
+                            <button onclick="document.getElementById('excelUpload').click()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📥 นำเข้าไฟล์ Excel</button>
+                            
+                            <button onclick="exportExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📤 ส่งออก</button>
+                            <button onclick="toggleAddStudentForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">+ เพิ่มรายบุคคล</button>
                         </div>
                     </div>
-                    <div id="addStudentForm" class="hide bg-gray-50 p-4 rounded-xl border space-y-4 print-hide">
-                        <h3 class="font-bold">ลงทะเบียนนักศึกษาใหม่</h3>
+                    
+                    <div id="addStudentForm" class="hide bg-gray-50 p-4 rounded-xl border space-y-4">
+                        <h3 class="font-bold">เพิ่มนักศึกษาใหม่ด้วยตนเอง</h3>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <input type="text" id="newDbId" placeholder="รหัสนักศึกษา" class="border rounded-lg px-3 py-2 text-sm"><input type="text" id="newDbName" placeholder="ชื่อ-นามสกุล" class="border rounded-lg px-3 py-2 text-sm"><input type="text" id="newDbDept" placeholder="แผนกวิชา" class="border rounded-lg px-3 py-2 text-sm">
-                            <button onclick="adminAddStudent()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm">บันทึกข้อมูล</button>
+                            <input type="text" id="newDbId" placeholder="รหัส" class="border rounded-lg px-3 py-2 text-sm"><input type="text" id="newDbName" placeholder="ชื่อ-สกุล" class="border rounded-lg px-3 py-2 text-sm"><input type="text" id="newDbDept" placeholder="แผนก" class="border rounded-lg px-3 py-2 text-sm">
+                            <button onclick="adminAddStudent()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm">บันทึก</button>
                         </div>
                     </div>
+
                     <div class="overflow-x-auto border rounded-xl">
-                        <table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="px-4 py-3">รหัส</th><th class="px-4 py-3">ชื่อ-นามสกุล</th><th class="px-4 py-3">แผนก</th><th class="px-4 py-3 text-center">แต้ม</th><th class="px-4 py-3 text-center print-hide">จัดการ</th></tr></thead><tbody id="studentTableBody" class="divide-y"></tbody></table>
+                        <table class="w-full text-sm text-left"><thead class="bg-gray-100 border-b"><tr><th class="px-4 py-3">รหัส</th><th class="px-4 py-3">ชื่อ-สกุล</th><th class="px-4 py-3">แผนก</th><th class="px-4 py-3 text-center">แต้ม</th><th class="px-4 py-3 text-center">จัดการ</th></tr></thead>
+                        <tbody id="studentTableBody" class="divide-y"></tbody></table>
                     </div>
                 </div>
 
@@ -221,41 +224,53 @@
                         <div class="flex gap-2"><input type="password" id="newAdminPassword" class="flex-1 border rounded-lg px-4 py-2"><button onclick="saveAdminPassword()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">เปลี่ยนรหัส</button></div>
                     </div>
                     <div class="max-w-xl bg-blue-50 p-6 rounded-xl border border-blue-200">
-                        <label class="block text-sm font-semibold mb-2 text-blue-800">3. เชื่อมต่อฐานข้อมูลคลาวด์ (Firebase Database URL)</label>
-                        <p class="text-xs text-blue-600 mb-3">เพื่อให้คอมพิวเตอร์และมือถือแชร์ข้อมูลชุดเดียวกัน ให้ใส่ลิงก์ Realtime Database (เว้นว่างไว้เพื่อใช้ LocalStorage)</p>
+                        <label class="block text-sm font-semibold mb-2 text-blue-800">3. เชื่อมต่อ Firebase Cloud (ฝังลงโค้ดแล้ว)</label>
                         <div class="flex gap-2">
-                            <input type="text" id="adminFirebaseUrl" placeholder="เช่น https://smart-waste-db.firebaseio.com" class="flex-1 border border-blue-300 rounded-lg px-4 py-2 outline-none">
-                            <button onclick="saveFirebaseUrl()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">บันทึก Cloud</button>
+                            <input type="text" id="adminFirebaseUrl" class="flex-1 border rounded-lg px-4 py-2 text-gray-500 bg-gray-100" readonly>
                         </div>
+                        <p class="text-xs text-blue-600 mt-2">ลิงก์ถูกฝังลงในโค้ดเป็นค่าเริ่มต้นแล้ว หากต้องการเปลี่ยนลิงก์ กรุณาแก้ที่ตัวไฟล์โค้ดโดยตรง</p>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hide print-hide">
+    <!-- Modal: แก้ไขข้อมูล -->
+    <div id="editModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hide print-hide backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl w-full max-w-sm border shadow-2xl">
-            <h3 class="text-xl font-bold mb-4">แก้ไขข้อมูล</h3>
-            <div class="space-y-3"><input type="text" id="editSid" readonly class="w-full bg-gray-100 border rounded-lg px-3 py-2 text-sm"><input type="text" id="editName" class="w-full border rounded-lg px-3 py-2 text-sm"><input type="text" id="editDept" class="w-full border rounded-lg px-3 py-2 text-sm"><input type="number" id="editPoints" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
-            <div class="flex gap-2 mt-5"><button onclick="document.getElementById('editModal').classList.add('hide')" class="flex-1 py-2 bg-gray-200 rounded-lg">ยกเลิก</button><button onclick="saveEditStudent()" class="flex-1 py-2 bg-emerald-600 text-white rounded-lg">บันทึก</button></div>
+            <h3 class="text-xl font-bold mb-4">แก้ไขข้อมูลนักศึกษา</h3>
+            <div class="space-y-3">
+                <label class="block text-xs font-semibold text-gray-500">รหัสนักศึกษา (แก้ไขไม่ได้)</label>
+                <input type="text" id="editSid" readonly class="w-full bg-gray-100 border rounded-lg px-3 py-2 text-sm text-gray-500 cursor-not-allowed">
+                <label class="block text-xs font-semibold text-gray-700">ชื่อ-นามสกุล</label>
+                <input type="text" id="editName" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-emerald-500 outline-none">
+                <label class="block text-xs font-semibold text-gray-700">แผนกวิชา</label>
+                <input type="text" id="editDept" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-emerald-500 outline-none">
+                <label class="block text-xs font-semibold text-gray-700">แต้มสะสม</label>
+                <input type="number" id="editPoints" class="w-full border rounded-lg px-3 py-2 text-sm focus:border-emerald-500 outline-none">
+            </div>
+            <div class="flex gap-2 mt-5">
+                <button onclick="document.getElementById('editModal').classList.add('hide')" class="flex-1 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-semibold transition">ยกเลิก</button>
+                <button onclick="saveEditStudent()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition">บันทึก</button>
+            </div>
         </div>
     </div>
 
     <script>
         /* ==========================================
-           1. ระบบฐานข้อมูล (Dual Mode: Local & Firebase)
+           1. ระบบฐานข้อมูล (ฝัง Firebase เป็นค่าเริ่มต้น)
            ========================================== */
         let studentsDB = { "67202040001": { name: "วงศธร", dept: "เทคโนโลยีธุรกิจดิจิทัล", points: 150 } };
         let historyDB = [];
         let espIP = localStorage.getItem('swg_esp_ip') || '192.168.1.100';
         let adminPass = localStorage.getItem('swg_admin_pass') || 'admin1234';
-        let firebaseUrl = localStorage.getItem('swg_firebase_url') || '';
+        
+        let firebaseUrl = 'https://smart-waste-db-42adf-default-rtdb.asia-southeast1.firebasedatabase.app/';
+        
         let activeView = 'gateway';
         let isCloudMode = false;
         let firebaseDB = null;
 
-        // อัปเดตสถานะหน้า Gateway
         function updateDbBadge() {
             const badge = document.getElementById('dbStatusBadge');
             if(firebaseUrl && isCloudMode) {
@@ -267,26 +282,18 @@
             }
         }
 
-        // เชื่อมต่อ Firebase ทันทีที่โหลด
         if (firebaseUrl) {
             try {
                 if (!firebase.apps.length) firebase.initializeApp({ databaseURL: firebaseUrl });
-                firebaseDB = firebase.database();
-                isCloudMode = true;
-                
-                // โหลดข้อมูลแบบ Realtime
+                firebaseDB = firebase.database(); isCloudMode = true;
                 firebaseDB.ref('swg_data').on('value', snapshot => {
                     const data = snapshot.val();
-                    if(data) {
-                        studentsDB = data.students || {};
-                        historyDB = data.history || [];
-                    }
+                    if(data) { studentsDB = data.students || {}; historyDB = data.history || []; }
                     if(activeView === 'kiosk') renderLeaderboard();
                     if(activeView === 'admin') renderAdmin();
                 });
-            } catch (error) { console.error("Firebase Connect Error"); isCloudMode = false; }
+            } catch (e) { isCloudMode = false; }
         } else {
-            // โหมด Local
             studentsDB = JSON.parse(localStorage.getItem('swg_students')) || studentsDB;
             historyDB = JSON.parse(localStorage.getItem('swg_history')) || [];
         }
@@ -298,10 +305,11 @@
             } else {
                 localStorage.setItem('swg_students', JSON.stringify(studentsDB));
                 localStorage.setItem('swg_history', JSON.stringify(historyDB));
+                if(activeView === 'kiosk') renderLeaderboard();
+                if(activeView === 'admin') renderAdmin();
             }
         }
 
-        // ซิงค์ข้ามแท็บสำหรับ Local Mode
         window.addEventListener('storage', (e) => {
             if(!isCloudMode && (e.key === 'swg_students' || e.key === 'swg_history')) {
                 studentsDB = JSON.parse(localStorage.getItem('swg_students')) || studentsDB;
@@ -312,9 +320,13 @@
         });
 
         /* ==========================================
-           2. ระบบเชื่อมต่อ ESP32 & Kiosk Mode
+           2. ระบบเชื่อมต่อ ESP32 & Polling ถังขยะ
            ========================================== */
         let connectionInterval;
+        let hardwarePollInterval;
+        let isRecycleFull = false;
+        let isGeneralFull = false;
+        
         function startEspCheck() {
             document.getElementById('viewKiosk').classList.remove('hide');
             document.getElementById('espWaitModal').classList.remove('hide');
@@ -329,21 +341,51 @@
                 const timeoutId = setTimeout(() => controller.abort(), 2000);
                 await fetch(`http://${espIP}/`, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
                 clearTimeout(timeoutId);
-                
                 clearInterval(connectionInterval);
                 document.getElementById('espWaitModal').classList.add('hide');
                 startAI(); 
-            } catch (error) { console.log("ESP32 Pending..."); }
+                startHardwarePolling();
+            } catch (e) {}
         }
 
         function forceStartKiosk() {
             clearInterval(connectionInterval);
             document.getElementById('espWaitModal').classList.add('hide');
-            startAI();
+            startAI(); startHardwarePolling();
+        }
+
+        function startHardwarePolling() {
+            if(hardwarePollInterval) clearInterval(hardwarePollInterval);
+            hardwarePollInterval = setInterval(async () => {
+                if(activeView !== 'kiosk') return;
+                try {
+                    const res = await fetch(`http://${espIP}/status`, { signal: AbortSignal.timeout(2000) });
+                    const data = await res.json();
+                    
+                    isRecycleFull = data.recycle_full;
+                    isGeneralFull = data.general_full;
+
+                    const fullModal = document.getElementById('binFullModal');
+                    const fullText = document.getElementById('binFullText');
+
+                    if(isRecycleFull && isGeneralFull) {
+                        fullText.innerText = "ถังขยะทั้ง 2 ฝั่งเต็มแล้ว!";
+                        fullModal.classList.remove('hide');
+                    } else if(isRecycleFull) {
+                        fullText.innerText = "ถังขยะรีไซเคิลเต็มแล้ว!";
+                        fullModal.classList.remove('hide');
+                    } else if(isGeneralFull) {
+                        fullText.innerText = "ถังขยะทั่วไปเต็มแล้ว!";
+                        fullModal.classList.remove('hide');
+                    } else {
+                        fullModal.classList.add('hide');
+                    }
+                } catch(e) { }
+            }, 3000);
         }
 
         function switchView(viewId) {
-            clearInterval(connectionInterval);
+            clearInterval(connectionInterval); clearInterval(hardwarePollInterval);
             document.getElementById('viewGateway').classList.add('hide');
             document.getElementById('viewKiosk').classList.add('hide');
             document.getElementById('viewAdmin').classList.add('hide');
@@ -356,7 +398,7 @@
         }
 
         /* ==========================================
-           3. AI & Distance Validator (เช็คระยะ 1 เมตร)
+           3. AI & Distance Validator
            ========================================== */
         let model, isProcessing = false;
         const video = document.getElementById('webcam');
@@ -373,17 +415,13 @@
                 video.onloadedmetadata = async () => {
                     canvas.width = video.videoWidth; canvas.height = video.videoHeight;
                     document.getElementById('aiStatusText').innerText = "กล้องพร้อมใช้งาน 100%";
-                    document.getElementById('aiStatusDot').classList.replace('bg-yellow-400', 'bg-emerald-400');
-                    model = await cocoSsd.load();
-                    requestAnimationFrame(detectLoop);
+                    model = await cocoSsd.load(); requestAnimationFrame(detectLoop);
                 };
             } catch(e) { document.getElementById('aiStatusText').innerText = "กรุณาเปิดสิทธิ์กล้อง"; }
         }
 
         async function detectLoop(timestamp) {
-            if(!model || video.readyState !== 4 || isProcessing || activeView !== 'kiosk') {
-                requestAnimationFrame(detectLoop); return;
-            }
+            if(!model || video.readyState !== 4 || isProcessing || activeView !== 'kiosk') { requestAnimationFrame(detectLoop); return; }
             if (timestamp - lastFrameTime < 250) { requestAnimationFrame(detectLoop); return; }
             lastFrameTime = timestamp;
             
@@ -409,35 +447,35 @@
         }
 
         function manualTrigger(type) { triggerBin(type); }
-        let currentTrashType = "";
+        
+        function showTempError(msg) {
+            const statusText = document.getElementById('aiStatusText');
+            statusText.innerText = msg; statusText.classList.add('text-red-400');
+            setTimeout(() => {
+                statusText.innerText = "กล้องพร้อมใช้งาน 100%";
+                statusText.classList.remove('text-red-400');
+                isProcessing = false;
+            }, 3000);
+        }
 
+        let currentTrashType = "";
         async function triggerBin(type) {
             if(isProcessing) return;
             isProcessing = true; 
-            const statusText = document.getElementById('aiStatusText');
 
-            // --- ระบบตรวจสอบระยะทางก่อนเปิดถัง ---
+            if(type === 'recycle' && isRecycleFull) return showTempError("❌ ไม่สามารถทิ้งได้ ถังขยะรีไซเคิลเต็มแล้ว!");
+            if(type === 'general' && isGeneralFull) return showTempError("❌ ไม่สามารถทิ้งได้ ถังขยะทั่วไปเต็มแล้ว!");
+
             try {
-                // ยิงคำสั่งไปขอค่าระยะทางจาก ESP32
-                const res = await fetch(`http://${espIP}/distance`, { signal: AbortSignal.timeout(2000) });
+                const res = await fetch(`http://${espIP}/status`, { signal: AbortSignal.timeout(2000) });
                 const data = await res.json();
                 
-                if (data.distance > 100) {
-                    // หากไกลกว่า 100 cm (1 เมตร) จะไม่อนุญาตให้เปิด
-                    statusText.innerText = `ขยะอยู่ไกลเกินไป (${data.distance} cm) กรุณาขยับเข้าใกล้ถังในระยะ 1 เมตร`;
-                    statusText.classList.add('text-red-400');
-                    setTimeout(() => {
-                        statusText.innerText = "กล้องพร้อมใช้งาน 100%";
-                        statusText.classList.remove('text-red-400');
-                        isProcessing = false;
-                    }, 3000);
-                    return;
-                }
-            } catch(e) {
-                // หากบอร์ดไม่มี API เซ็นเซอร์ระยะทาง จะข้ามการเช็คไปเลยเพื่อไม่ให้ค้าง
-                console.log("ข้ามการเช็คระยะทาง (API /distance ไม่ตอบสนอง)");
-            }
-            // -------------------------------------
+                isRecycleFull = data.recycle_full; isGeneralFull = data.general_full;
+                if(type === 'recycle' && isRecycleFull) return showTempError("❌ ไม่สามารถทิ้งได้ ถังขยะรีไซเคิลเต็มแล้ว!");
+                if(type === 'general' && isGeneralFull) return showTempError("❌ ไม่สามารถทิ้งได้ ถังขยะทั่วไปเต็มแล้ว!");
+
+                if (data.person_distance > 100) return showTempError(`ขยะอยู่ไกลเกินไป (${data.person_distance} cm) กรุณาขยับเข้าใกล้ถัง`);
+            } catch(e) {}
 
             currentTrashType = type;
             try { fetch(`http://${espIP}/open?type=${type}`, { mode: 'no-cors' }); } catch(e){}
@@ -445,7 +483,6 @@
             document.getElementById('binTitle').innerText = type === 'recycle' ? "♻️ เปิดถังรีไซเคิล" : "🗑️ เปิดถังขยะทั่วไป";
             document.getElementById('openingModal').classList.remove('hide');
             ctx.clearRect(0,0, canvas.width, canvas.height); 
-            
             setTimeout(() => { document.getElementById('openingModal').classList.add('hide'); showClaimModal(); }, 4000);
         }
 
@@ -454,24 +491,18 @@
            ========================================== */
         let claimTimer;
         function showClaimModal() {
-            document.getElementById('claimModal').classList.remove('hide');
-            document.getElementById('claimStudentId').value = '';
-            document.getElementById('studentFoundBadge').classList.add('hide');
-            document.getElementById('studentNotFoundBadge').classList.add('hide');
-            document.getElementById('btnSubmitClaim').disabled = true;
-            document.getElementById('btnSubmitClaim').className = "flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
+            document.getElementById('claimModal').classList.remove('hide'); document.getElementById('claimStudentId').value = '';
+            document.getElementById('studentFoundBadge').classList.add('hide'); document.getElementById('studentNotFoundBadge').classList.add('hide');
+            document.getElementById('btnSubmitClaim').disabled = true; document.getElementById('btnSubmitClaim').className = "flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
             document.getElementById('claimStudentId').focus();
-            
-            let time = 15;
-            document.getElementById('claimCountdown').innerText = time;
+            let time = 15; document.getElementById('claimCountdown').innerText = time;
             claimTimer = setInterval(() => { time--; document.getElementById('claimCountdown').innerText = time; if(time <= 0) skipClaim(); }, 1000);
         }
 
         function skipClaim() { clearInterval(claimTimer); document.getElementById('claimModal').classList.add('hide'); setTimeout(() => isProcessing = false, 1500); }
 
         function checkStudentId() {
-            const sid = document.getElementById('claimStudentId').value.trim();
-            const btn = document.getElementById('btnSubmitClaim');
+            const sid = document.getElementById('claimStudentId').value.trim(); const btn = document.getElementById('btnSubmitClaim');
             if(sid.length > 0) {
                 if(studentsDB[sid]) {
                     document.getElementById('studentFoundBadge').classList.remove('hide'); document.getElementById('studentNotFoundBadge').classList.add('hide');
@@ -493,31 +524,17 @@
             studentsDB[sid].points += 10;
             historyDB.unshift({ timestamp: Date.now(), time: new Date().toLocaleString('th-TH'), sid: sid, name: studentsDB[sid].name, type: currentTrashType === 'recycle' ? 'รีไซเคิล' : 'ทั่วไป', points: 10 });
             
-            syncDB(); // บันทึกลง Cloud/Local
+            syncDB(); 
             try { fetch(`http://${espIP}/open?type=${currentTrashType}&sid=${sid}`, { mode: 'no-cors' }); } catch(e){}
-            renderLeaderboard(); skipClaim();
-        }
-
-        function renderLeaderboard() {
-            document.getElementById('leaderboardList').innerHTML = Object.entries(studentsDB).sort((a,b) => b[1].points - a[1].points).slice(0, 10).map((s, i) => `
-                <div class="flex justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
-                    <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold">${i+1}</div>
-                    <div><p class="font-semibold text-sm">${s[1].name}</p><p class="text-xs text-slate-400">${s[0]}</p></div></div>
-                    <div class="font-bold text-emerald-400">${s[1].points} Pts</div>
-                </div>
-            `).join('');
+            skipClaim();
         }
 
         /* ==========================================
-           5. โหมด Admin (รองรับ Cloud Sync)
+           5. โหมด Admin (รองรับระบบ Excel นำเข้า/ส่งออก)
            ========================================== */
         let chartInst1 = null, chartInst2 = null;
-
         function showAdminLogin() { document.getElementById('adminLoginModal').classList.remove('hide'); document.getElementById('adminPassword').value = ''; }
-        function verifyAdmin() {
-            if(document.getElementById('adminPassword').value === adminPass) { document.getElementById('adminLoginModal').classList.add('hide'); switchView('admin'); } else { alert("รหัสผ่านไม่ถูกต้อง!"); }
-        }
-
+        function verifyAdmin() { if(document.getElementById('adminPassword').value === adminPass) { document.getElementById('adminLoginModal').classList.add('hide'); switchView('admin'); } else { alert("รหัสผ่านไม่ถูกต้อง!"); } }
         function switchAdminTab(tabName) {
             ['dashboard', 'database', 'settings'].forEach(t => { document.getElementById('admin-'+t).classList.add('hide'); document.getElementById('tab-'+t).className = "w-full text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100 transition"; });
             document.getElementById('admin-'+tabName).classList.remove('hide'); document.getElementById('tab-'+tabName).className = "w-full text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700 transition";
@@ -536,7 +553,6 @@
             document.getElementById('statRecycle').innerText = rec; document.getElementById('statGeneral').innerText = gen;
             if(chartInst1) chartInst1.destroy();
             chartInst1 = new Chart(document.getElementById('statChart').getContext('2d'), { type: 'doughnut', data: { labels: ['รีไซเคิล', 'ทั่วไป'], datasets: [{ data: [rec, gen], backgroundColor: ['#10b981', '#f59e0b'] }] }, options: { responsive: true, maintainAspectRatio: false } });
-
             const deptStats = {}; Object.values(studentsDB).forEach(s => { deptStats[s.dept] = (deptStats[s.dept]||0) + s.points; });
             if(chartInst2) chartInst2.destroy();
             chartInst2 = new Chart(document.getElementById('deptChart').getContext('2d'), { type: 'bar', data: { labels: Object.keys(deptStats), datasets: [{ label: 'แต้มสะสม', data: Object.values(deptStats), backgroundColor: '#3b82f6', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
@@ -544,30 +560,98 @@
             document.getElementById('studentTableBody').innerHTML = Object.entries(studentsDB).map(([id, data]) => `
                 <tr class="hover:bg-gray-50 border-b"><td class="px-4 py-2 font-mono">${id}</td><td class="px-4 py-2 font-semibold">${data.name}</td>
                 <td class="px-4 py-2 text-gray-600">${data.dept}</td><td class="px-4 py-2 text-center font-bold text-emerald-600">${data.points}</td>
-                <td class="px-4 py-2 text-center print-hide"><button onclick="openEditModal('${id}')" class="text-blue-600 border border-blue-200 px-2 py-1 rounded bg-blue-50 mr-2">แก้ไข</button><button onclick="deleteStudent('${id}')" class="text-red-600 border border-red-200 px-2 py-1 rounded bg-red-50">ลบ</button></td></tr>
+                <td class="px-4 py-2 text-center print-hide">
+                    <button onclick="openEditModal('${id}')" class="text-blue-600 border border-blue-200 px-2 py-1 rounded bg-blue-50 mr-2 hover:bg-blue-100 transition">แก้ไข</button>
+                    <button onclick="deleteStudent('${id}')" class="text-red-600 border border-red-200 px-2 py-1 rounded bg-red-50 hover:bg-red-100 transition">ลบ</button>
+                </td></tr>
             `).join('');
-            
-            document.getElementById('adminEspIp').value = espIP;
-            document.getElementById('adminFirebaseUrl').value = firebaseUrl;
         }
 
+        // --- ระบบเพิ่ม/แก้ไข/ลบ ข้อมูลด้วยมือ ---
         function toggleAddStudentForm() { document.getElementById('addStudentForm').classList.toggle('hide'); }
         function adminAddStudent() {
             const sid = document.getElementById('newDbId').value.trim(), name = document.getElementById('newDbName').value.trim();
             if(!sid || !name) return alert("กรุณากรอกรหัสและชื่อ");
             studentsDB[sid] = { name, dept: document.getElementById('newDbDept').value.trim() || 'ไม่ระบุ', points: 0 };
-            syncDB(); renderAdmin(); toggleAddStudentForm(); document.getElementById('newDbId').value = ''; document.getElementById('newDbName').value = '';
+            syncDB(); toggleAddStudentForm(); document.getElementById('newDbId').value = ''; document.getElementById('newDbName').value = ''; alert('เพิ่มรายชื่อสำเร็จ!');
         }
+
         function openEditModal(sid) {
-            const s = studentsDB[sid]; document.getElementById('editSid').value = sid; document.getElementById('editName').value = s.name;
-            document.getElementById('editDept').value = s.dept; document.getElementById('editPoints').value = s.points; document.getElementById('editModal').classList.remove('hide');
+            const s = studentsDB[sid]; 
+            document.getElementById('editSid').value = sid; 
+            document.getElementById('editName').value = s.name;
+            document.getElementById('editDept').value = s.dept; 
+            document.getElementById('editPoints').value = s.points; 
+            document.getElementById('editModal').classList.remove('hide');
         }
+
         function saveEditStudent() {
             const sid = document.getElementById('editSid').value;
-            studentsDB[sid] = { name: document.getElementById('editName').value, dept: document.getElementById('editDept').value, points: parseInt(document.getElementById('editPoints').value) || 0 };
-            syncDB(); renderAdmin(); document.getElementById('editModal').classList.add('hide');
+            studentsDB[sid] = { 
+                name: document.getElementById('editName').value, 
+                dept: document.getElementById('editDept').value, 
+                points: parseInt(document.getElementById('editPoints').value) || 0 
+            };
+            syncDB(); 
+            document.getElementById('editModal').classList.add('hide');
         }
-        function deleteStudent(sid) { if(confirm(`ยืนยันลบ ${studentsDB[sid].name}?`)) { delete studentsDB[sid]; syncDB(); renderAdmin(); } }
+
+        function deleteStudent(sid) { if(confirm(`ยืนยันลบ ${studentsDB[sid].name}?`)) { delete studentsDB[sid]; syncDB(); } }
+
+        // --- ระบบจัดการไฟล์ Excel ---
+        function downloadTemplate() {
+            const ws = XLSX.utils.json_to_sheet([{ "รหัสนักศึกษา": "67202040001", "ชื่อ-นามสกุล": "นายสมชาย ใจดี", "แผนกวิชา": "เทคโนโลยีธุรกิจดิจิทัล", "แต้มสะสม": 0 }]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template");
+            XLSX.writeFile(wb, "Student_Template.xlsx");
+        }
+
+        function importExcel(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    let importedCount = 0;
+                    rows.forEach(row => {
+                        const sid = row['รหัสนักศึกษา'] || row['ID'];
+                        const name = row['ชื่อ-นามสกุล'] || row['Name'];
+                        if(sid && name) {
+                            // เก็บแต้มเดิมไว้ถ้านักศึกษามีข้อมูลอยู่แล้ว
+                            const existingPoints = studentsDB[sid] ? studentsDB[sid].points : 0;
+                            const points = row['แต้มสะสม'] !== undefined ? parseInt(row['แต้มสะสม']) : existingPoints;
+                            
+                            studentsDB[sid] = { 
+                                name: name, 
+                                dept: row['แผนกวิชา'] || (studentsDB[sid] ? studentsDB[sid].dept : 'ไม่ระบุ'), 
+                                points: isNaN(points) ? 0 : points
+                            };
+                            importedCount++;
+                        }
+                    });
+                    
+                    if(importedCount > 0) {
+                        syncDB();
+                        alert(`นำเข้าข้อมูลสำเร็จจำนวน ${importedCount} รายการ!`);
+                    } else {
+                        alert("ไฟล์ไม่ถูกต้อง ต้องมีคอลัมน์ 'รหัสนักศึกษา' และ 'ชื่อ-นามสกุล'");
+                    }
+                } catch(err) {
+                    alert("เกิดข้อผิดพลาดในการอ่านไฟล์ Excel");
+                }
+                document.getElementById('excelUpload').value = ''; 
+            };
+            if(e.target.files[0]) reader.readAsArrayBuffer(e.target.files[0]);
+        }
+
+        function exportExcel() {
+            const dataArray = Object.entries(studentsDB).map(([id, data]) => ({"รหัสนักศึกษา": id, "ชื่อ-นามสกุล": data.name, "แผนกวิชา": data.dept, "แต้มสะสม": data.points}));
+            const ws = XLSX.utils.json_to_sheet(dataArray); const wb = XLSX.utils.book_new(); 
+            XLSX.utils.book_append_sheet(wb, ws, "Database"); XLSX.writeFile(wb, "SmartWaste.xlsx");
+        }
         
         function saveIp() { espIP = document.getElementById('adminEspIp').value; localStorage.setItem('swg_esp_ip', espIP); alert("บันทึก IP สำเร็จ!"); }
         function saveAdminPassword() {
@@ -576,30 +660,6 @@
             localStorage.setItem('swg_admin_pass', newPass); adminPass = newPass; alert("เปลี่ยนรหัสผ่านแอดมินเรียบร้อยแล้ว!"); document.getElementById('newAdminPassword').value = ''; 
         }
         
-        // บันทึก Cloud URL และรีเฟรชหน้าเพื่อเชื่อมต่อ
-        function saveFirebaseUrl() {
-            const url = document.getElementById('adminFirebaseUrl').value.trim();
-            localStorage.setItem('swg_firebase_url', url);
-            alert("บันทึก Cloud Database เรียบร้อยแล้ว ระบบจะทำการรีเฟรชหน้าเว็บ 1 ครั้ง");
-            window.location.reload();
-        }
-
-        // นำเข้า / ส่งออก
-        function exportExcel() {
-            const dataArray = Object.entries(studentsDB).map(([id, data]) => ({"รหัสนักศึกษา": id, "ชื่อ-นามสกุล": data.name, "แผนกวิชา": data.dept, "แต้มสะสม": data.points}));
-            const ws = XLSX.utils.json_to_sheet(dataArray); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Database"); XLSX.writeFile(wb, "SmartWaste.xlsx");
-        }
-        function importExcel(e) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]]).forEach(row => {
-                    const sid = row['รหัสนักศึกษา'] || row['ID']; const name = row['ชื่อ-นามสกุล'] || row['Name'];
-                    if(sid && name) studentsDB[sid] = { name, dept: row['แผนกวิชา'] || 'ไม่ระบุ', points: parseInt(row['แต้มสะสม']) || 0 };
-                });
-                syncDB(); renderAdmin(); alert("นำเข้าสำเร็จ!");
-            };
-            if(e.target.files[0]) reader.readAsArrayBuffer(e.target.files[0]);
-        }
     </script>
 </body>
 </html>
