@@ -24,7 +24,6 @@
         .glass { background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .hide { display: none !important; }
         
-        /* ปรับสัดส่วนกล้องให้เหมาะกับมือถือ (4/3) และจอคอมพิวเตอร์ (16/9) */
         .video-container { 
             position: relative; 
             width: 100%; 
@@ -47,7 +46,6 @@
         }
         canvas { z-index: 10; pointer-events: none; }
         
-        /* ป้องกัน iOS ซูมหน้าจออัตโนมัติเมื่อกดช่อง Input */
         input, select, button { font-size: 16px !important; }
         
         @media print { 
@@ -149,7 +147,7 @@
         <button onclick="switchView('gateway')" class="px-8 py-3.5 bg-white/20 active:bg-white/30 text-white rounded-xl font-semibold border border-white/50 transition">กลับหน้าหลัก</button>
     </div>
 
-    <!-- Modal: รอเชื่อมต่อ ESP32 (ล็อกสิทธิ์แก้ไขและตัดปุ่มข้ามออกแล้ว) -->
+    <!-- Modal: รอเชื่อมต่อ ESP32 -->
     <div id="espWaitModal" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-4 hide">
         <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-6"></div>
         <h2 class="text-2xl md:text-4xl font-bold text-emerald-400 mb-2 text-center">กำลังรอการเชื่อมต่อจากตู้ขยะ (ESP32)...</h2>
@@ -173,7 +171,7 @@
         <div class="w-64 h-2 bg-slate-800 rounded-full mt-8 overflow-hidden"><div class="h-full bg-emerald-500 w-full origin-left animate-[shrink_4s_linear]"></div></div>
     </div>
 
-    <!-- Modal: สะสมแต้ม (รองรับแป้นตัวเลขมือถือ) -->
+    <!-- Modal: สะสมแต้ม -->
     <div id="claimModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hide">
         <div class="bg-slate-800 p-6 md:p-8 rounded-3xl w-full max-w-md border border-slate-700 shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
@@ -203,7 +201,7 @@
 
         <main class="p-3 md:p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
             <div class="lg:col-span-1 flex lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0 print-hide">
-                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class=" whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700">📊 ภาพรวมสถิติ</button>
+                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700">📊 ภาพรวมสถิติ</button>
                 <button onclick="switchAdminTab('database')" id="tab-database" class="whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100">👥 ฐานข้อมูลนักศึกษา</button>
                 <button onclick="switchAdminTab('settings')" id="tab-settings" class="whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100">⚙️ ตั้งค่าระบบ</button>
             </div>
@@ -316,13 +314,14 @@
         </main>
     </div>
 
-    <!-- Modal: แก้ไขข้อมูล -->
+    <!-- Modal: แก้ไขข้อมูล (รองรับแก้ไขรหัสนักศึกษา) -->
     <div id="editModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hide print-hide backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl w-full max-w-sm border shadow-2xl">
             <h3 class="text-xl font-bold mb-4 text-gray-800">แก้ไขข้อมูลนักศึกษา</h3>
+            <input type="text" id="editOriginalSid" class="hide">
             <div class="space-y-3">
-                <label class="block text-xs font-semibold text-gray-500">รหัสนักศึกษา (แก้ไขไม่ได้)</label>
-                <input type="text" id="editSid" readonly class="w-full bg-gray-100 border rounded-lg px-3 py-2 text-gray-500 cursor-not-allowed font-mono">
+                <label class="block text-xs font-semibold text-gray-700">รหัสนักศึกษา</label>
+                <input type="text" inputmode="numeric" id="editSid" class="w-full border rounded-lg px-3 py-2 text-gray-800 focus:border-emerald-500 outline-none font-mono">
                 <label class="block text-xs font-semibold text-gray-700">ชื่อ-นามสกุล</label>
                 <input type="text" id="editName" class="w-full border rounded-lg px-3 py-2 text-gray-800 focus:border-emerald-500 outline-none">
                 <label class="block text-xs font-semibold text-gray-700">แผนกวิชา</label>
@@ -390,7 +389,6 @@
                             espIP = data.espIP;
                             localStorage.setItem('swg_esp_ip', espIP);
                             updateIpDisplay();
-                            // หากหน้าจอรอเชื่อมต่อเปิดอยู่ ให้ลองเชื่อมต่อกับ IP ใหม่ทันที
                             if(activeView === 'kiosk') checkEspConnection();
                         }
                         if(data.adminPass) {
@@ -430,7 +428,7 @@
         }
 
         /* =========================================================
-           2. ระบบเชื่อมต่อ ESP32 แบบบังคับเชื่อมต่อ (No Bypass)
+           2. ระบบเชื่อมต่อ ESP32 แบบบังคับเชื่อมต่อ (Strict Kiosk)
            ========================================================= */
         let connectionInterval;
         let hardwarePollInterval;
@@ -461,7 +459,6 @@
                 startAI(); 
                 startHardwarePolling();
             } catch (e) {
-                // ยังเชื่อมต่อไม่ได้ ให้รอเช็ครอบถัดไป
             } finally {
                 isCheckingEsp = false;
             }
@@ -585,7 +582,6 @@
                     document.getElementById('aiStatusText').innerText = "กำลังเตรียมสมองกล AI...";
                     await tf.setBackend('webgl');
                     await tf.ready();
-                    // ใช้โมเดล lite_mobilenet_v2 เพื่อความลื่นไหลสูงสุดบนมือถือและโน้ตบุ๊ก
                     model = await cocoSsd.load({ base: 'lite_mobilenet_v2' }); 
                 }
                 
@@ -603,7 +599,6 @@
                 requestAnimationFrame(detectLoop); 
                 return; 
             }
-            // จำกัดความถี่การตรวจจับที่ทุกๆ 220ms เพื่อลดภาระ CPU/GPU มือถือและไม่ให้ภาพกระตุก
             if (timestamp - lastFrameTime < 220) { 
                 requestAnimationFrame(detectLoop); 
                 return; 
@@ -806,7 +801,10 @@
             });
             
             let rec = 0, gen = 0; 
-            filteredHist.forEach(h => { if(h.type === 'รีไซเคิล') rec++; else gen++; });
+            filteredHist.forEach(h => { 
+                if(h.type === 'รีไซเคิล' || h.type === 'recycle') rec++; 
+                else gen++; 
+            });
             
             const recEl = document.getElementById('statRecycle');
             const genEl = document.getElementById('statGeneral');
@@ -870,6 +868,7 @@
         function openEditModal(sid) {
             const s = studentsDB[sid]; 
             if(!s) return;
+            document.getElementById('editOriginalSid').value = sid; 
             document.getElementById('editSid').value = sid; 
             document.getElementById('editName').value = s.name || '';
             document.getElementById('editDept').value = s.dept || ''; 
@@ -878,13 +877,23 @@
         }
 
         function saveEditStudent() {
-            const sid = document.getElementById('editSid').value;
+            const originalSid = document.getElementById('editOriginalSid').value.trim();
+            const newSid = document.getElementById('editSid').value.trim();
             const name = document.getElementById('editName').value.trim();
             const dept = document.getElementById('editDept').value.trim() || 'ไม่ระบุ';
             const pts = parseInt(document.getElementById('editPoints').value) || 0;
             
-            if(!name) return alert("ชื่อ-นามสกุลต้องไม่เป็นค่าว่าง");
-            studentsDB[sid] = { name: name, dept: dept, points: pts };
+            if(!newSid || !name) return alert("กรุณากรอกรหัสนักศึกษาและชื่อ-นามสกุล");
+            
+            if(newSid !== originalSid && studentsDB[newSid]) {
+                return alert("รหัสนักศึกษาใหม่นี้มีอยู่ในระบบแล้ว!");
+            }
+            
+            if(newSid !== originalSid) {
+                delete studentsDB[originalSid];
+            }
+            
+            studentsDB[newSid] = { name: name, dept: dept, points: pts };
             syncDB(); 
             renderAdmin();
             document.getElementById('editModal').classList.add('hide');
@@ -974,7 +983,7 @@
             espIP = newIp; 
             localStorage.setItem('swg_esp_ip', espIP); 
             updateIpDisplay();
-            syncDB(); // ซิงค์ IP ขึ้น Firebase Cloud ทันที
+            syncDB();
             alert("บันทึกและซิงค์ IP ไปยังทุกอุปกรณ์สำเร็จ!"); 
         }
 
