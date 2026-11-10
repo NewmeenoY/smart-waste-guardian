@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ผู้พิทักษ์การคัดแยกขยะอัจฉริยะ (Smart Waste Guardian)</title>
     <!-- โหลดไลบรารีที่จำเป็น -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,149 +15,176 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Kanit', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        * { -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            touch-action: manipulation; 
+            overscroll-behavior-y: none; 
+        }
+        .glass { background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .hide { display: none !important; }
-        .video-container { position: relative; width: 100%; aspect-ratio: 16/9; max-height: 65vh; margin: 0 auto; background: #000; border-radius: 1rem; overflow: hidden; }
-        video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        canvas { z-index: 10; }
-        @media print { body { background: white; color: black; } #viewAdmin header, .print-hide, #admin-settings { display: none !important; } #viewAdmin { min-height: auto; } .shadow-sm, .border { box-shadow: none; border: 1px solid #ddd; } }
+        
+        /* ปรับสัดส่วนกล้องให้เหมาะกับมือถือ (4/3) และจอคอมพิวเตอร์ (16/9) */
+        .video-container { 
+            position: relative; 
+            width: 100%; 
+            aspect-ratio: 4/3; 
+            max-height: 55vh; 
+            margin: 0 auto; 
+            background: #000; 
+            border-radius: 1rem; 
+            overflow: hidden; 
+            transform: translateZ(0);
+        }
+        @media (min-width: 768px) {
+            .video-container { aspect-ratio: 16/9; max-height: 65vh; }
+        }
+        video, canvas { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+        }
+        canvas { z-index: 10; pointer-events: none; }
+        
+        /* ป้องกัน iOS ซูมหน้าจออัตโนมัติเมื่อกดช่อง Input */
+        input, select, button { font-size: 16px !important; }
+        
+        @media print { 
+            body { background: white; color: black; } 
+            #viewAdmin header, .print-hide, #admin-settings { display: none !important; } 
+            #viewAdmin { min-height: auto; } 
+            .shadow-sm, .border { box-shadow: none; border: 1px solid #ddd; } 
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen selection:bg-emerald-500 selection:text-white relative">
 
     <!-- 1. Gateway -->
     <div id="viewGateway" class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-emerald-400 mb-2">Smart Waste Guardian</h1>
-            <h2 class="text-2xl font-semibold mb-4">ผู้พิทักษ์การคัดแยกขยะอัจฉริยะ</h2>
-            <p class="text-slate-400 mb-2">จัดทำโดย วิทยาลัยสารพัดช่างบรรหาร-แจ่มใส จังหวัดสุพรรณบุรี</p>
-            <span id="dbStatusBadge" class="inline-block bg-slate-700 text-slate-300 text-xs px-3 py-1 rounded-full">สถานะฐานข้อมูล: กำลังเชื่อมต่อ...</span>
+        <div class="text-center mb-8 px-2">
+            <h1 class="text-3xl md:text-5xl font-bold text-emerald-400 mb-2">Smart Waste Guardian</h1>
+            <h2 class="text-xl md:text-2xl font-semibold mb-3">ผู้พิทักษ์การคัดแยกขยะอัจฉริยะ</h2>
+            <p class="text-sm md:text-base text-slate-400 mb-3">จัดทำโดย วิทยาลัยสารพัดช่างบรรหาร-แจ่มใส จังหวัดสุพรรณบุรี</p>
+            <span id="dbStatusBadge" class="inline-block bg-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full">สถานะฐานข้อมูล: กำลังเชื่อมต่อ...</span>
         </div>
-        <div class="flex flex-col md:flex-row gap-4 w-full max-w-2xl justify-center">
-            <button onclick="switchView('kiosk')" class="flex-1 glass p-8 rounded-2xl hover:bg-emerald-600/20 transition border-emerald-500/30 group">
-                <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">♻️</div>
-                <h3 class="text-xl font-bold text-emerald-400">เข้าสู่โหมดหน้าตู้ (Kiosk)</h3>
-                <p class="text-sm text-slate-400 mt-2">สำหรับจุดสแกนและคัดแยกขยะ</p>
+        <div class="flex flex-col md:flex-row gap-4 w-full max-w-2xl justify-center px-2">
+            <button onclick="switchView('kiosk')" class="flex-1 glass p-6 md:p-8 rounded-2xl active:scale-95 hover:bg-emerald-600/20 transition border-emerald-500/30 group">
+                <div class="text-5xl md:text-6xl mb-3 group-hover:scale-110 transition-transform">♻️</div>
+                <h3 class="text-lg md:text-xl font-bold text-emerald-400">เข้าสู่โหมดหน้าตู้ (Kiosk)</h3>
+                <p class="text-xs md:text-sm text-slate-400 mt-1">สำหรับจุดสแกนและคัดแยกขยะ</p>
             </button>
-            <button onclick="showAdminLogin()" class="flex-1 glass p-8 rounded-2xl hover:bg-blue-600/20 transition border-blue-500/30 group">
-                <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">📊</div>
-                <h3 class="text-xl font-bold text-blue-400">ระบบจัดการหลังบ้าน (Admin)</h3>
-                <p class="text-sm text-slate-400 mt-2">สำหรับผู้ดูแลระบบและดูสถิติ</p>
+            <button onclick="showAdminLogin()" class="flex-1 glass p-6 md:p-8 rounded-2xl active:scale-95 hover:bg-blue-600/20 transition border-blue-500/30 group">
+                <div class="text-5xl md:text-6xl mb-3 group-hover:scale-110 transition-transform">📊</div>
+                <h3 class="text-lg md:text-xl font-bold text-blue-400">ระบบจัดการหลังบ้าน (Admin)</h3>
+                <p class="text-xs md:text-sm text-slate-400 mt-1">สำหรับผู้ดูแลระบบและตั้งค่า IP</p>
             </button>
         </div>
     </div>
 
     <!-- Modal: Login -->
-    <div id="adminLoginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hide">
-        <div class="bg-slate-800 p-8 rounded-2xl w-full max-w-sm border border-slate-700 text-center">
+    <div id="adminLoginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hide">
+        <div class="bg-slate-800 p-6 md:p-8 rounded-2xl w-full max-w-sm border border-slate-700 text-center shadow-2xl">
             <h3 class="text-xl font-bold mb-4">เข้าสู่ระบบผู้ดูแล</h3>
-            <input type="password" id="adminPassword" placeholder="รหัสผ่าน" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 mb-4 text-center focus:outline-none focus:border-emerald-500">
+            <input type="password" id="adminPassword" placeholder="รหัสผ่านแอดมิน" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 mb-4 text-center focus:outline-none focus:border-emerald-500">
             <div class="flex gap-2">
-                <button onclick="document.getElementById('adminLoginModal').classList.add('hide')" class="flex-1 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold">ยกเลิก</button>
-                <button onclick="verifyAdmin()" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold">ยืนยัน</button>
+                <button onclick="document.getElementById('adminLoginModal').classList.add('hide')" class="flex-1 py-3 rounded-xl bg-slate-700 active:bg-slate-600 font-semibold">ยกเลิก</button>
+                <button onclick="verifyAdmin()" class="flex-1 py-3 rounded-xl bg-emerald-600 active:bg-emerald-500 font-semibold">ยืนยัน</button>
             </div>
         </div>
     </div>
 
     <!-- 2. Kiosk Mode -->
     <div id="viewKiosk" class="hide min-h-screen bg-slate-900 flex flex-col">
-        <header class="glass px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+        <header class="glass px-4 md:px-6 py-3 md:py-4 flex justify-between items-center sticky top-0 z-40">
             <div>
-                <h1 class="text-xl font-bold text-emerald-400">Smart Waste Guardian</h1>
-                <p class="text-xs text-slate-400">วิทยาลัยสารพัดช่างบรรหาร-แจ่มใส จ.สุพรรณบุรี | IP: <span id="kioskHeaderIp" class="font-mono text-emerald-300"></span></p>
+                <h1 class="text-lg md:text-xl font-bold text-emerald-400">Smart Waste Guardian</h1>
+                <p class="text-xs text-slate-400">เชื่อมต่อตู้: <span id="kioskHeaderIp" class="font-mono text-emerald-300"></span></p>
             </div>
-            <button onclick="switchView('gateway')" class="text-sm bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg transition">กลับหน้าหลัก</button>
+            <button onclick="switchView('gateway')" class="text-sm bg-slate-800 active:bg-slate-700 px-4 py-2 rounded-lg transition border border-slate-700">กลับหน้าหลัก</button>
         </header>
 
-        <main class="flex-1 p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto w-full">
+        <main class="flex-1 p-3 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 max-w-7xl mx-auto w-full">
             <div class="lg:col-span-2 space-y-4">
-                <div class="glass p-4 rounded-2xl border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="font-semibold text-lg flex items-center gap-2">
+                <div class="glass p-3 md:p-4 rounded-2xl border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="font-semibold text-base md:text-lg flex items-center gap-2">
                             <span id="aiStatusDot" class="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></span>
                             <span id="aiStatusText" class="transition-colors duration-300 font-bold">กำลังเตรียมระบบ...</span>
                         </h2>
+                        <button onclick="switchCamera()" id="btnSwitchCam" class="text-xs bg-slate-800 active:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 hide">🔄 สลับกล้อง</button>
                     </div>
                     
                     <div class="video-container border-2 border-slate-700 shadow-inner">
                         <video id="webcam" autoplay playsinline muted></video>
                         <canvas id="canvas"></canvas>
-                        <div class="absolute inset-0 border-2 border-dashed border-white/20 m-12 rounded-xl pointer-events-none z-20"></div>
+                        <div class="absolute inset-0 border-2 border-dashed border-white/25 m-6 md:m-12 rounded-xl pointer-events-none z-20"></div>
                     </div>
 
-                    <div class="mt-4 flex justify-between items-center bg-slate-800/50 p-3 rounded-xl">
+                    <div class="mt-3 md:mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-800/60 p-3 rounded-xl">
                         <div>
-                            <p class="text-sm text-slate-400">วัตถุที่ตรวจพบ:</p>
-                            <p id="detectResult" class="text-lg font-bold text-emerald-400">กำลังค้นหาขยะ...</p>
+                            <p class="text-xs text-slate-400">วัตถุที่ตรวจพบล่าสุด:</p>
+                            <p id="detectResult" class="text-base md:text-lg font-bold text-emerald-400">กำลังค้นหาขยะ...</p>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="manualTrigger('recycle')" class="px-4 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white rounded-lg text-sm border border-emerald-500/50 transition">รีไซเคิล</button>
-                            <button onclick="manualTrigger('general')" class="px-4 py-2 bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white rounded-lg text-sm border border-amber-500/50 transition">ขยะทั่วไป</button>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="manualTrigger('recycle')" class="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600/20 text-emerald-400 active:bg-emerald-600 active:text-white rounded-xl text-sm font-semibold border border-emerald-500/50 transition">♻️ รีไซเคิล</button>
+                            <button onclick="manualTrigger('general')" class="flex-1 sm:flex-none px-4 py-2.5 bg-amber-600/20 text-amber-400 active:bg-amber-600 active:text-white rounded-xl text-sm font-semibold border border-amber-500/50 transition">🗑️ ขยะทั่วไป</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="glass p-6 rounded-2xl flex flex-col">
-                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">🏆 ทำเนียบคนรักษ์โลก</h2>
-                <div id="leaderboardList" class="flex-1 overflow-y-auto space-y-3 pr-2"></div>
+            <div class="glass p-4 md:p-6 rounded-2xl flex flex-col max-h-[45vh] lg:max-h-none">
+                <h2 class="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">🏆 ทำเนียบคนรักษ์โลก (Top 10)</h2>
+                <div id="leaderboardList" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
             </div>
         </main>
     </div>
 
     <!-- Modal: ถังขยะเต็ม (แจ้งเตือน) -->
-    <div id="binFullModal" class="fixed inset-0 bg-red-900/95 z-[60] flex flex-col items-center justify-center hide backdrop-blur-md">
-        <div class="text-8xl mb-6 animate-pulse">⚠️</div>
-        <h2 id="binFullText" class="text-4xl md:text-5xl font-bold text-white mb-4 text-center px-4 drop-shadow-lg">ถังขยะเต็มแล้ว!</h2>
-        <p class="text-red-200 text-xl mb-8 font-semibold">กรุณาติดต่อเจ้าหน้าที่เพื่อเคลียร์ขยะ</p>
-        <button onclick="switchView('gateway')" class="px-8 py-4 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold border border-white/50 transition">กลับหน้าหลัก</button>
+    <div id="binFullModal" class="fixed inset-0 bg-red-900/95 z-[60] flex flex-col items-center justify-center p-4 hide backdrop-blur-md">
+        <div class="text-7xl md:text-8xl mb-6 animate-pulse">⚠️</div>
+        <h2 id="binFullText" class="text-3xl md:text-5xl font-bold text-white mb-3 text-center px-4 drop-shadow-lg">ถังขยะเต็มแล้ว!</h2>
+        <p class="text-red-200 text-base md:text-xl mb-8 font-semibold text-center">กรุณาติดต่อเจ้าหน้าที่เพื่อเคลียร์ขยะก่อนใช้งานต่อ</p>
+        <button onclick="switchView('gateway')" class="px-8 py-3.5 bg-white/20 active:bg-white/30 text-white rounded-xl font-semibold border border-white/50 transition">กลับหน้าหลัก</button>
     </div>
 
-    <!-- Modal: รอเชื่อมต่อ ESP32 (พร้อมช่องแก้ IP ด่วน) -->
+    <!-- Modal: รอเชื่อมต่อ ESP32 (ล็อกสิทธิ์แก้ไขและตัดปุ่มข้ามออกแล้ว) -->
     <div id="espWaitModal" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-4 hide">
         <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-6"></div>
-        <h2 class="text-2xl md:text-4xl font-bold text-emerald-400 mb-2 text-center">กำลังรอการเชื่อมต่อจาก ESP32...</h2>
-        <p class="text-slate-400 text-base mb-4">เป้าหมาย IP: <span id="waitEspIp" class="text-emerald-300 font-mono font-bold"></span> (ซิงค์ผ่าน Cloud อัตโนมัติ)</p>
+        <h2 class="text-2xl md:text-4xl font-bold text-emerald-400 mb-2 text-center">กำลังรอการเชื่อมต่อจากตู้ขยะ (ESP32)...</h2>
+        <p class="text-slate-400 text-sm md:text-base mb-6 text-center">หมายเลข IP เป้าหมาย: <span id="waitEspIp" class="text-emerald-300 font-mono font-bold"></span></p>
         
-        <!-- กล่องเปลี่ยน IP ด่วนจากหน้า Kiosk -->
-        <div class="flex gap-2 mb-6 w-full max-w-xs">
-            <input type="text" id="quickIpInput" placeholder="เปลี่ยน IP ด่วนที่นี่..." class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white text-center font-mono focus:outline-none focus:border-emerald-500">
-            <button onclick="quickSaveIp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">อัปเดต IP</button>
+        <div class="bg-slate-800/90 p-4 md:p-5 rounded-2xl max-w-md text-left border border-slate-700 mb-6 text-xs md:text-sm text-slate-300 space-y-2.5 shadow-xl">
+            <p class="text-amber-400 font-semibold text-sm">📌 คำแนะนำหากเชื่อมต่อไม่ได้:</p>
+            <p>1. <b>สำหรับมือถือ:</b> กรุณา<b>ปิดอินเทอร์เน็ตซิม (4G/5G) ชั่วคราว</b> และเชื่อมต่อเฉพาะ WiFi วงเดียวกับตู้ขยะ</p>
+            <p>2. <b>ตรวจสอบสถานะตู้:</b> ตรวจสอบว่าเสียบปลั๊กตู้ขยะแล้ว และหน้าจอ OLED บนตู้แสดงเลข IP ตรงกับด้านบน</p>
+            <p>3. <b>การเปลี่ยน IP:</b> ผู้ใช้งานทั่วไปไม่สามารถแก้ไข IP เองได้ กรุณาแจ้งผู้ดูแลระบบให้อัปเดต IP ในระบบหลังบ้าน (Admin)</p>
         </div>
 
-        <div class="bg-slate-800 p-4 rounded-xl max-w-lg text-left border border-slate-700 mb-6 text-xs md:text-sm text-slate-300 space-y-2">
-            <p class="text-amber-400 font-semibold">💡 ทำไมมือถือถึงค้างหน้านี้?</p>
-            <p>1. <b>ลืมปิดเน็ตซิม (4G/5G):</b> มือถือมักวิ่งไปใช้เน็ตซิมแทน WiFi เมื่อหา IP ภายใน ให้ปิดเน็ตซิมชั่วคราวแล้วต่อเฉพาะ WiFi วงเดียวกับบอร์ด</p>
-            <p>2. <b>เบราว์เซอร์บล็อก HTTP:</b> หากเปิดผ่านลิงก์ GitHub (`https://`) เบราว์เซอร์มือถืออาจบล็อกการส่งคำสั่งไปหาบอร์ด (`http://`) ให้กดปุ่ม <b>"ข้ามการเชื่อมต่อ"</b> ด้านล่างเพื่อใช้งานกล้องและสะสมแต้มผ่าน Cloud ได้ทันที</p>
-        </div>
-
-        <div class="flex gap-4">
-            <button onclick="switchView('gateway')" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold transition">กลับหน้าหลัก</button>
-            <button onclick="forceStartKiosk()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold shadow-lg transition">ข้ามการเชื่อมต่อ (เปิดกล้องทันที)</button>
-        </div>
+        <button onclick="switchView('gateway')" class="px-8 py-3.5 bg-slate-700 active:bg-slate-600 rounded-xl font-semibold transition border border-slate-600">กลับหน้าหลัก</button>
     </div>
 
     <!-- Modal: เปิดฝาถัง -->
-    <div id="openingModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center hide">
-        <div class="text-8xl mb-6 animate-bounce" id="binIcon">🗑️</div>
-        <h2 class="text-3xl font-bold text-emerald-400 mb-2" id="binTitle">กำลังเปิดฝาถัง...</h2>
-        <p class="text-xl text-slate-300">กรุณาทิ้งขยะลงถัง</p>
+    <div id="openingModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 hide">
+        <div class="text-7xl md:text-8xl mb-6 animate-bounce" id="binIcon">🗑️</div>
+        <h2 class="text-2xl md:text-3xl font-bold text-emerald-400 mb-2 text-center" id="binTitle">กำลังเปิดฝาถัง...</h2>
+        <p class="text-lg md:text-xl text-slate-300">กรุณาทิ้งขยะลงถัง</p>
         <div class="w-64 h-2 bg-slate-800 rounded-full mt-8 overflow-hidden"><div class="h-full bg-emerald-500 w-full origin-left animate-[shrink_4s_linear]"></div></div>
     </div>
 
-    <!-- Modal: สะสมแต้ม -->
-    <div id="claimModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hide">
-        <div class="bg-slate-800 p-8 rounded-3xl w-full max-w-md border border-slate-700 shadow-2xl relative overflow-hidden">
+    <!-- Modal: สะสมแต้ม (รองรับแป้นตัวเลขมือถือ) -->
+    <div id="claimModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hide">
+        <div class="bg-slate-800 p-6 md:p-8 rounded-3xl w-full max-w-md border border-slate-700 shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
-            <div class="text-center mb-6"><div class="text-5xl mb-2">🎉</div><h2 class="text-2xl font-bold text-white">คุณได้รับ +10 แต้ม!</h2></div>
+            <div class="text-center mb-5"><div class="text-5xl mb-2">🎉</div><h2 class="text-2xl font-bold text-white">คุณได้รับ +10 แต้ม!</h2></div>
             <div class="space-y-4">
-                <input type="text" id="claimStudentId" oninput="checkStudentId()" placeholder="กรอกรหัสนักศึกษา" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-center text-lg focus:outline-none focus:border-emerald-500" maxlength="20">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="claimStudentId" oninput="checkStudentId()" placeholder="กรอกรหัสนักศึกษา" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white text-center text-lg font-mono focus:outline-none focus:border-emerald-500" maxlength="20">
                 <div id="studentFoundBadge" class="bg-emerald-900/30 border border-emerald-500/30 text-emerald-400 p-3 rounded-xl text-center text-sm hide">ยินดีต้อนรับ, <strong id="claimStudentNameDisplay">ชื่อ</strong></div>
                 <div id="studentNotFoundBadge" class="bg-red-900/30 border border-red-500/30 text-red-400 p-3 rounded-xl text-center text-sm hide">⚠️ ไม่พบรหัสนักศึกษานี้ในระบบ</div>
                 <div class="flex gap-2 pt-2">
-                    <button onclick="skipClaim()" class="flex-1 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold text-slate-300">ข้าม</button>
-                    <button id="btnSubmitClaim" onclick="submitClaim()" class="flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed" disabled>รับแต้ม</button>
+                    <button onclick="skipClaim()" class="flex-1 py-3.5 rounded-xl bg-slate-700 active:bg-slate-600 font-semibold text-slate-300">ข้าม</button>
+                    <button id="btnSubmitClaim" onclick="submitClaim()" class="flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed" disabled>รับแต้ม</button>
                 </div>
             </div>
             <p class="text-center text-xs text-slate-500 mt-4">ปิดอัตโนมัติใน <span id="claimCountdown">15</span> วินาที</p>
@@ -166,28 +193,28 @@
 
     <!-- 3. โหมด Admin -->
     <div id="viewAdmin" class="hide min-h-screen bg-gray-50 text-slate-800">
-        <header class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
-            <h1 class="text-xl font-bold text-emerald-600">Smart Waste Guardian | Admin Dashboard</h1>
-            <div class="flex gap-3 print-hide">
-                <button onclick="window.print()" class="text-sm bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg transition">🖨️ พิมพ์ PDF</button>
-                <button onclick="switchView('gateway')" class="text-sm bg-slate-800 text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition">ออกจากระบบ</button>
+        <header class="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex justify-between items-center sticky top-0 z-30">
+            <h1 class="text-lg md:text-xl font-bold text-emerald-600">Smart Waste Guardian | Admin</h1>
+            <div class="flex gap-2 print-hide">
+                <button onclick="window.print()" class="text-xs md:text-sm bg-blue-600 text-white active:bg-blue-700 px-3 md:px-4 py-2 rounded-lg transition">🖨️ พิมพ์ PDF</button>
+                <button onclick="switchView('gateway')" class="text-xs md:text-sm bg-slate-800 text-white active:bg-slate-700 px-3 md:px-4 py-2 rounded-lg transition">ออกจากระบบ</button>
             </div>
         </header>
 
-        <main class="p-4 md:p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <div class="lg:col-span-1 space-y-2 print-hide">
-                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="w-full text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700">📊 ภาพรวมสถิติ</button>
-                <button onclick="switchAdminTab('database')" id="tab-database" class="w-full text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100">👥 ฐานข้อมูลนักศึกษา</button>
-                <button onclick="switchAdminTab('settings')" id="tab-settings" class="w-full text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100">⚙️ ตั้งค่าระบบ</button>
+        <main class="p-3 md:p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
+            <div class="lg:col-span-1 flex lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0 print-hide">
+                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class=" whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700">📊 ภาพรวมสถิติ</button>
+                <button onclick="switchAdminTab('database')" id="tab-database" class="whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100">👥 ฐานข้อมูลนักศึกษา</button>
+                <button onclick="switchAdminTab('settings')" id="tab-settings" class="whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100">⚙️ ตั้งค่าระบบ</button>
             </div>
 
-            <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[500px]">
+            <div class="lg:col-span-4 bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[500px]">
                 
                 <!-- Dashboard Tab -->
                 <div id="admin-dashboard" class="space-y-6">
                     <div class="flex justify-between items-center gap-4">
-                        <h2 class="text-2xl font-bold">สถิติและรายงานผล (Real-time)</h2>
-                        <select id="timeFilter" onchange="renderAdmin()" class="border rounded-lg px-4 py-2 bg-white outline-none print-hide">
+                        <h2 class="text-xl md:text-2xl font-bold">สถิติและรายงานผล (Real-time)</h2>
+                        <select id="timeFilter" onchange="renderAdmin()" class="border rounded-lg px-3 py-2 bg-white outline-none print-hide">
                             <option value="all">ทั้งหมด</option><option value="day">วันนี้</option><option value="month">เดือนนี้</option>
                         </select>
                     </div>
@@ -201,7 +228,7 @@
                             <canvas id="deptChart" class="max-h-48 w-full"></canvas>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 flex justify-between items-center">
                             <div>
                                 <p class="text-sm text-emerald-600 font-medium">ขยะรีไซเคิลรวม (ชิ้น)</p>
@@ -221,27 +248,27 @@
 
                 <!-- Database Tab (พร้อมระบบ Excel) -->
                 <div id="admin-database" class="hide space-y-6">
-                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <h2 class="text-2xl font-bold">ฐานข้อมูลนักศึกษา</h2>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h2 class="text-xl md:text-2xl font-bold">ฐานข้อมูลนักศึกษา</h2>
                         
-                        <div class="flex flex-wrap gap-2 print-hide">
-                            <button onclick="downloadTemplate()" class="bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📄 โหลดไฟล์ต้นแบบ</button>
+                        <div class="flex flex-wrap gap-2 print-hide w-full md:w-auto">
+                            <button onclick="downloadTemplate()" class="bg-slate-600 active:bg-slate-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📄 โหลดไฟล์ต้นแบบ</button>
                             
                             <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" class="hidden" onchange="importExcel(event)">
-                            <button onclick="document.getElementById('excelUpload').click()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📥 นำเข้าไฟล์ Excel</button>
+                            <button onclick="document.getElementById('excelUpload').click()" class="bg-amber-500 active:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📥 นำเข้า Excel</button>
                             
-                            <button onclick="exportExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📤 ส่งออก Excel</button>
-                            <button onclick="toggleAddStudentForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">+ เพิ่มรายบุคคล</button>
+                            <button onclick="exportExcel()" class="bg-blue-600 active:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📤 ส่งออก Excel</button>
+                            <button onclick="toggleAddStudentForm()" class="bg-emerald-600 active:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">+ เพิ่มรายบุคคล</button>
                         </div>
                     </div>
                     
                     <div id="addStudentForm" class="hide bg-gray-50 p-4 rounded-xl border space-y-4 print-hide">
                         <h3 class="font-bold">เพิ่มนักศึกษาใหม่ด้วยตนเอง</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <input type="text" id="newDbId" placeholder="รหัสนักศึกษา" class="border rounded-lg px-3 py-2 text-sm focus:border-emerald-500 outline-none">
-                            <input type="text" id="newDbName" placeholder="ชื่อ-นามสกุล" class="border rounded-lg px-3 py-2 text-sm focus:border-emerald-500 outline-none">
-                            <input type="text" id="newDbDept" placeholder="แผนกวิชา" class="border rounded-lg px-3 py-2 text-sm focus:border-emerald-500 outline-none">
-                            <button onclick="adminAddStudent()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">บันทึกข้อมูล</button>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <input type="text" inputmode="numeric" id="newDbId" placeholder="รหัสนักศึกษา" class="border rounded-lg px-3 py-2 focus:border-emerald-500 outline-none">
+                            <input type="text" id="newDbName" placeholder="ชื่อ-นามสกุล" class="border rounded-lg px-3 py-2 focus:border-emerald-500 outline-none">
+                            <input type="text" id="newDbDept" placeholder="แผนกวิชา" class="border rounded-lg px-3 py-2 focus:border-emerald-500 outline-none">
+                            <button onclick="adminAddStudent()" class="bg-emerald-600 active:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition">บันทึกข้อมูล</button>
                         </div>
                     </div>
 
@@ -249,11 +276,11 @@
                         <table class="w-full text-sm text-left">
                             <thead class="bg-gray-100 border-b">
                                 <tr>
-                                    <th class="px-4 py-3">รหัสนักศึกษา</th>
-                                    <th class="px-4 py-3">ชื่อ-นามสกุล</th>
-                                    <th class="px-4 py-3">แผนกวิชา</th>
-                                    <th class="px-4 py-3 text-center">แต้มสะสม</th>
-                                    <th class="px-4 py-3 text-center print-hide">จัดการ</th>
+                                    <th class="px-3 md:px-4 py-3">รหัสนักศึกษา</th>
+                                    <th class="px-3 md:px-4 py-3">ชื่อ-นามสกุล</th>
+                                    <th class="px-3 md:px-4 py-3">แผนกวิชา</th>
+                                    <th class="px-3 md:px-4 py-3 text-center">แต้มสะสม</th>
+                                    <th class="px-3 md:px-4 py-3 text-center print-hide">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody id="studentTableBody" class="divide-y"></tbody>
@@ -263,27 +290,25 @@
 
                 <!-- Settings Tab -->
                 <div id="admin-settings" class="hide space-y-6">
-                    <h2 class="text-2xl font-bold">ตั้งค่าระบบ (Settings)</h2>
-                    <div class="max-w-xl bg-gray-50 p-6 rounded-xl border">
+                    <h2 class="text-xl md:text-2xl font-bold">ตั้งค่าระบบ (Settings)</h2>
+                    <div class="max-w-xl bg-gray-50 p-5 md:p-6 rounded-xl border">
                         <label class="block text-sm font-semibold mb-1">1. บอร์ด ESP32-S3 (IP Address)</label>
-                        <p class="text-xs text-gray-500 mb-3">เมื่อกดบันทึก ค่า IP จะถูกซิงค์ไปยังมือถือและคอมพิวเตอร์ทุกเครื่องอัตโนมัติผ่าน Cloud</p>
-                        <div class="flex gap-2">
-                            <input type="text" id="adminEspIp" class="flex-1 border rounded-lg px-4 py-2 font-mono">
-                            <button onclick="saveIp()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition">บันทึกและซิงค์ IP</button>
+                        <p class="text-xs text-gray-500 mb-3">ตั้งค่าได้เฉพาะผู้ดูแลระบบ เมื่อกดบันทึก ค่า IP จะถูกซิงค์ไปยังมือถือและหน้าตู้ทุกเครื่องโดยอัตโนมัติ</p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="adminEspIp" placeholder="เช่น 192.168.1.100" class="flex-1 border rounded-lg px-4 py-2.5 font-mono">
+                            <button onclick="saveIp()" class="bg-emerald-600 active:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition">บันทึกและซิงค์ IP</button>
                         </div>
                     </div>
-                    <div class="max-w-xl bg-gray-50 p-6 rounded-xl border">
+                    <div class="max-w-xl bg-gray-50 p-5 md:p-6 rounded-xl border">
                         <label class="block text-sm font-semibold mb-2">2. เปลี่ยนรหัสแอดมิน (ซิงค์ทุกเครื่อง)</label>
-                        <div class="flex gap-2">
-                            <input type="password" id="newAdminPassword" placeholder="รหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร)" class="flex-1 border rounded-lg px-4 py-2">
-                            <button onclick="saveAdminPassword()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">เปลี่ยนรหัส</button>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="password" id="newAdminPassword" placeholder="รหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร)" class="flex-1 border rounded-lg px-4 py-2.5">
+                            <button onclick="saveAdminPassword()" class="bg-blue-600 active:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition">เปลี่ยนรหัส</button>
                         </div>
                     </div>
-                    <div class="max-w-xl bg-blue-50 p-6 rounded-xl border border-blue-200">
+                    <div class="max-w-xl bg-blue-50 p-5 md:p-6 rounded-xl border border-blue-200">
                         <label class="block text-sm font-semibold mb-2 text-blue-800">3. เชื่อมต่อ Firebase Cloud (ฝังลงโค้ดแล้ว)</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="adminFirebaseUrl" class="flex-1 border rounded-lg px-4 py-2 text-gray-500 bg-gray-100 font-mono text-xs" readonly>
-                        </div>
+                        <input type="text" id="adminFirebaseUrl" class="w-full border rounded-lg px-4 py-2 text-gray-500 bg-gray-100 font-mono text-xs" readonly>
                         <p class="text-xs text-blue-600 mt-2">✅ ลิงก์ฐานข้อมูลถูกฝังลงในโค้ดเรียบร้อยแล้ว ข้อมูลนักศึกษา แต้ม และ IP ของบอร์ดจะซิงค์ตรงกันทุกเครื่องแบบเรียลไทม์</p>
                     </div>
                 </div>
@@ -292,22 +317,22 @@
     </div>
 
     <!-- Modal: แก้ไขข้อมูล -->
-    <div id="editModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hide print-hide backdrop-blur-sm">
+    <div id="editModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hide print-hide backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl w-full max-w-sm border shadow-2xl">
             <h3 class="text-xl font-bold mb-4 text-gray-800">แก้ไขข้อมูลนักศึกษา</h3>
             <div class="space-y-3">
                 <label class="block text-xs font-semibold text-gray-500">รหัสนักศึกษา (แก้ไขไม่ได้)</label>
-                <input type="text" id="editSid" readonly class="w-full bg-gray-100 border rounded-lg px-3 py-2 text-sm text-gray-500 cursor-not-allowed font-mono">
+                <input type="text" id="editSid" readonly class="w-full bg-gray-100 border rounded-lg px-3 py-2 text-gray-500 cursor-not-allowed font-mono">
                 <label class="block text-xs font-semibold text-gray-700">ชื่อ-นามสกุล</label>
-                <input type="text" id="editName" class="w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-emerald-500 outline-none">
+                <input type="text" id="editName" class="w-full border rounded-lg px-3 py-2 text-gray-800 focus:border-emerald-500 outline-none">
                 <label class="block text-xs font-semibold text-gray-700">แผนกวิชา</label>
-                <input type="text" id="editDept" class="w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-emerald-500 outline-none">
+                <input type="text" id="editDept" class="w-full border rounded-lg px-3 py-2 text-gray-800 focus:border-emerald-500 outline-none">
                 <label class="block text-xs font-semibold text-gray-700">แต้มสะสม</label>
-                <input type="number" id="editPoints" class="w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-emerald-500 outline-none">
+                <input type="number" inputmode="numeric" id="editPoints" class="w-full border rounded-lg px-3 py-2 text-gray-800 focus:border-emerald-500 outline-none">
             </div>
             <div class="flex gap-2 mt-5">
-                <button onclick="document.getElementById('editModal').classList.add('hide')" class="flex-1 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition">ยกเลิก</button>
-                <button onclick="saveEditStudent()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition">บันทึก</button>
+                <button onclick="document.getElementById('editModal').classList.add('hide')" class="flex-1 py-2.5 bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg font-semibold transition">ยกเลิก</button>
+                <button onclick="saveEditStudent()" class="flex-1 py-2.5 bg-emerald-600 active:bg-emerald-700 text-white rounded-lg font-semibold transition">บันทึก</button>
             </div>
         </div>
     </div>
@@ -324,7 +349,6 @@
         let espIP = localStorage.getItem('swg_esp_ip') || '192.168.1.100';
         let adminPass = localStorage.getItem('swg_admin_pass') || 'admin1234';
         
-        // ฝังลิงก์ Firebase Realtime Database เป็นค่าเริ่มต้น
         const firebaseUrl = 'https://smart-waste-db-42adf-default-rtdb.asia-southeast1.firebasedatabase.app/';
         
         let activeView = 'gateway';
@@ -334,21 +358,19 @@
         function updateDbBadge() {
             const badge = document.getElementById('dbStatusBadge');
             if(firebaseUrl && isCloudMode) {
-                badge.innerText = "สถานะ: เชื่อมต่อ Cloud Database แล้ว (ซิงค์ข้อมูลและ IP ทุกเครื่อง 🟢)";
-                badge.className = "inline-block bg-emerald-900/50 text-emerald-400 border border-emerald-500 text-xs px-3 py-1 rounded-full mt-2";
+                badge.innerText = "สถานะ: เชื่อมต่อ Cloud แล้ว (ซิงค์ข้อมูลและ IP อัตโนมัติ 🟢)";
+                badge.className = "inline-block bg-emerald-900/50 text-emerald-400 border border-emerald-500 text-xs px-3 py-1.5 rounded-full mt-2";
             } else {
                 badge.innerText = "สถานะ: Local Storage (ออฟไลน์ ⚪)";
-                badge.className = "inline-block bg-slate-700 text-slate-300 text-xs px-3 py-1 rounded-full mt-2";
+                badge.className = "inline-block bg-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full mt-2";
             }
         }
 
         function updateIpDisplay() {
             const waitIpEl = document.getElementById('waitEspIp');
-            const quickIpEl = document.getElementById('quickIpInput');
             const headerIpEl = document.getElementById('kioskHeaderIp');
             const adminIpEl = document.getElementById('adminEspIp');
             if(waitIpEl) waitIpEl.innerText = espIP;
-            if(quickIpEl && document.activeElement !== quickIpEl) quickIpEl.value = espIP;
             if(headerIpEl) headerIpEl.innerText = espIP;
             if(adminIpEl && document.activeElement !== adminIpEl) adminIpEl.value = espIP;
         }
@@ -364,16 +386,18 @@
                     if(data) { 
                         if(data.students) studentsDB = data.students;
                         historyDB = data.history || []; 
-                        if(data.espIP) {
+                        if(data.espIP && data.espIP !== espIP) {
                             espIP = data.espIP;
                             localStorage.setItem('swg_esp_ip', espIP);
+                            updateIpDisplay();
+                            // หากหน้าจอรอเชื่อมต่อเปิดอยู่ ให้ลองเชื่อมต่อกับ IP ใหม่ทันที
+                            if(activeView === 'kiosk') checkEspConnection();
                         }
                         if(data.adminPass) {
                             adminPass = data.adminPass;
                             localStorage.setItem('swg_admin_pass', adminPass);
                         }
                     } else {
-                        // หากฐานข้อมูลบน Cloud ยังว่างเปล่า ให้ส่งค่าเริ่มต้นขึ้นไปสร้างทันที
                         syncDB();
                     }
                     updateIpDisplay();
@@ -405,13 +429,14 @@
             }
         }
 
-        /* ==========================================
-           2. ระบบเชื่อมต่อ ESP32 & Polling ถังขยะ
-           ========================================== */
+        /* =========================================================
+           2. ระบบเชื่อมต่อ ESP32 แบบบังคับเชื่อมต่อ (No Bypass)
+           ========================================================= */
         let connectionInterval;
         let hardwarePollInterval;
         let isRecycleFull = false;
         let isGeneralFull = false;
+        let isCheckingEsp = false;
         
         function startEspCheck() {
             document.getElementById('viewKiosk').classList.remove('hide');
@@ -419,13 +444,15 @@
             updateIpDisplay();
             checkEspConnection();
             if(connectionInterval) clearInterval(connectionInterval);
-            connectionInterval = setInterval(checkEspConnection, 3000);
+            connectionInterval = setInterval(checkEspConnection, 2500);
         }
 
         async function checkEspConnection() {
+            if(isCheckingEsp || activeView !== 'kiosk') return;
+            isCheckingEsp = true;
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const timeoutId = setTimeout(() => controller.abort(), 1800);
                 await fetch(`http://${espIP}/`, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
                 clearTimeout(timeoutId);
                 
@@ -434,25 +461,10 @@
                 startAI(); 
                 startHardwarePolling();
             } catch (e) {
-                console.log("Waiting for ESP32 at " + espIP);
+                // ยังเชื่อมต่อไม่ได้ ให้รอเช็ครอบถัดไป
+            } finally {
+                isCheckingEsp = false;
             }
-        }
-
-        function quickSaveIp() {
-            const newIp = document.getElementById('quickIpInput').value.trim();
-            if(!newIp) return;
-            espIP = newIp;
-            localStorage.setItem('swg_esp_ip', espIP);
-            updateIpDisplay();
-            syncDB(); // ซิงค์ IP ใหม่ขึ้น Cloud ให้ทุกเครื่องทันที
-            checkEspConnection();
-        }
-
-        function forceStartKiosk() {
-            clearInterval(connectionInterval);
-            document.getElementById('espWaitModal').classList.add('hide');
-            startAI(); 
-            startHardwarePolling();
         }
 
         function startHardwarePolling() {
@@ -461,7 +473,7 @@
                 if(activeView !== 'kiosk') return;
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+                    const timeoutId = setTimeout(() => controller.abort(), 1800);
                     const res = await fetch(`http://${espIP}/status`, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     const data = await res.json();
@@ -485,12 +497,21 @@
                         fullModal.classList.add('hide');
                     }
                 } catch(e) { }
-            }, 3000);
+            }, 3500);
+        }
+
+        function stopCameraStream() {
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
         }
 
         function switchView(viewId) {
             clearInterval(connectionInterval); 
             clearInterval(hardwarePollInterval);
+            if(viewId !== 'kiosk') stopCameraStream();
+
             document.getElementById('viewGateway').classList.add('hide');
             document.getElementById('viewKiosk').classList.add('hide');
             document.getElementById('viewAdmin').classList.add('hide');
@@ -512,65 +533,111 @@
             }
         }
 
-        /* ==========================================
-           3. ระบบกล้อง AI (ตัดการเช็กระยะคนยืนออกแล้ว)
-           ========================================== */
-        let model, isProcessing = false;
+        /* =========================================================
+           3. ระบบกล้อง AI ประสิทธิภาพสูง (รองรับมือถือลื่นไหล)
+           ========================================================= */
+        let model = null;
+        let isProcessing = false;
+        let isDetectingFrame = false;
+        let currentFacingMode = "environment";
         const video = document.getElementById('webcam');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let lastFrameTime = 0;
 
-        async function startAI() {
-            if(model) return;
-            try {
-                await tf.setBackend('webgl');
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } } 
-                });
-                video.srcObject = stream;
-                video.onloadedmetadata = async () => {
+        async function initCameraStream() {
+            stopCameraStream();
+            const constraints = {
+                audio: false,
+                video: { 
+                    facingMode: { ideal: currentFacingMode }, 
+                    width: { ideal: 480 }, 
+                    height: { ideal: 360 },
+                    frameRate: { ideal: 24, max: 30 }
+                }
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = stream;
+            return new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    video.play();
                     canvas.width = video.videoWidth; 
                     canvas.height = video.videoHeight;
-                    document.getElementById('aiStatusText').innerText = "กำลังโหลดโมเดล AI...";
-                    model = await cocoSsd.load(); 
-                    document.getElementById('aiStatusText').innerText = "กล้องพร้อมใช้งาน 100%";
-                    document.getElementById('aiStatusDot').classList.replace('bg-yellow-400', 'bg-emerald-400');
-                    requestAnimationFrame(detectLoop);
+                    resolve();
                 };
+            });
+        }
+
+        async function switchCamera() {
+            currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+            try {
+                await initCameraStream();
+            } catch(e) {}
+        }
+
+        async function startAI() {
+            try {
+                document.getElementById('aiStatusText').innerText = "กำลังเปิดกล้อง...";
+                await initCameraStream();
+                document.getElementById('btnSwitchCam').classList.remove('hide');
+
+                if(!model) {
+                    document.getElementById('aiStatusText').innerText = "กำลังเตรียมสมองกล AI...";
+                    await tf.setBackend('webgl');
+                    await tf.ready();
+                    // ใช้โมเดล lite_mobilenet_v2 เพื่อความลื่นไหลสูงสุดบนมือถือและโน้ตบุ๊ก
+                    model = await cocoSsd.load({ base: 'lite_mobilenet_v2' }); 
+                }
+                
+                document.getElementById('aiStatusText').innerText = "กล้องพร้อมสแกนขยะ 100%";
+                document.getElementById('aiStatusDot').classList.replace('bg-yellow-400', 'bg-emerald-400');
+                requestAnimationFrame(detectLoop);
             } catch(e) { 
-                document.getElementById('aiStatusText').innerText = "กรุณากดอนุญาตสิทธิ์การใช้กล้อง"; 
+                document.getElementById('aiStatusText').innerText = "กรุณากดอนุญาตสิทธิ์การใช้กล้องบนเบราว์เซอร์"; 
             }
         }
 
         async function detectLoop(timestamp) {
-            if(!model || video.readyState !== 4 || isProcessing || activeView !== 'kiosk') { 
-                requestAnimationFrame(detectLoop); return; 
+            if(activeView !== 'kiosk') return;
+            if(!model || video.readyState < 2 || isProcessing || isDetectingFrame) { 
+                requestAnimationFrame(detectLoop); 
+                return; 
             }
-            if (timestamp - lastFrameTime < 250) { 
-                requestAnimationFrame(detectLoop); return; 
+            // จำกัดความถี่การตรวจจับที่ทุกๆ 220ms เพื่อลดภาระ CPU/GPU มือถือและไม่ให้ภาพกระตุก
+            if (timestamp - lastFrameTime < 220) { 
+                requestAnimationFrame(detectLoop); 
+                return; 
             }
             lastFrameTime = timestamp;
+            isDetectingFrame = true;
             
             try {
-                const predictions = await model.detect(video);
-                ctx.clearRect(0,0, canvas.width, canvas.height);
+                const predictions = await model.detect(video, 5, 0.55);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 let detected = null;
-                predictions.forEach(p => {
-                    if(p.class === 'person') return;
-                    if(p.score > 0.6) detected = p;
-                    ctx.strokeStyle = "#10b981"; ctx.lineWidth = 4;
+
+                for (let i = 0; i < predictions.length; i++) {
+                    const p = predictions[i];
+                    if(p.class === 'person') continue;
+                    if(p.score > 0.60 && !detected) detected = p;
+                    
+                    ctx.strokeStyle = "#10b981"; 
+                    ctx.lineWidth = 3;
                     ctx.strokeRect(p.bbox[0], p.bbox[1], p.bbox[2], p.bbox[3]);
-                    ctx.fillStyle = "#10b981"; ctx.font = "bold 24px Kanit";
-                    ctx.fillText(`${p.class} (${Math.round(p.score*100)}%)`, p.bbox[0], p.bbox[1] > 20 ? p.bbox[1]-5 : 20);
-                });
+                    ctx.fillStyle = "#10b981"; 
+                    ctx.font = "bold 18px Kanit";
+                    ctx.fillText(`${p.class} (${Math.round(p.score*100)}%)`, p.bbox[0], p.bbox[1] > 20 ? p.bbox[1] - 5 : 20);
+                }
 
                 if(detected) {
                     document.getElementById('detectResult').innerText = detected.class;
                     const recycleClasses = ['bottle', 'cup', 'wine glass', 'book', 'paper', 'vase'];
                     triggerBin(recycleClasses.includes(detected.class) ? 'recycle' : 'general');
                 }
-            } catch(e) {}
+            } catch(e) {
+            } finally {
+                isDetectingFrame = false;
+            }
             requestAnimationFrame(detectLoop);
         }
 
@@ -581,7 +648,7 @@
             statusText.innerText = msg; 
             statusText.classList.add('text-red-400');
             setTimeout(() => {
-                statusText.innerText = "กล้องพร้อมใช้งาน 100%";
+                statusText.innerText = "กล้องพร้อมสแกนขยะ 100%";
                 statusText.classList.remove('text-red-400');
                 isProcessing = false;
             }, 3000);
@@ -592,34 +659,34 @@
             if(isProcessing) return;
             isProcessing = true; 
 
-            // ตรวจสอบสถานะถังขยะเต็มก่อนเปิดฝา
-            if(type === 'recycle' && isRecycleFull) return showTempError("❌ ไม่สามารถทิ้งได้ ถังขยะรีไซเคิลเต็มแล้ว!");
-            if(type === 'general' && isGeneralFull) return showTempError("❌ ไม่สามารถทิ้งได้ ถังขยะทั่วไปเต็มแล้ว!");
+            if(type === 'recycle' && isRecycleFull) return showTempError("❌ ถังขยะรีไซเคิลเต็มแล้ว!");
+            if(type === 'general' && isGeneralFull) return showTempError("❌ ถังขยะทั่วไปเต็มแล้ว!");
 
             currentTrashType = type;
             try { fetch(`http://${espIP}/open?type=${type}`, { mode: 'no-cors' }); } catch(e){}
             
             document.getElementById('binTitle').innerText = type === 'recycle' ? "♻️ เปิดถังรีไซเคิล" : "🗑️ เปิดถังขยะทั่วไป";
             document.getElementById('openingModal').classList.remove('hide');
-            ctx.clearRect(0,0, canvas.width, canvas.height); 
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
             setTimeout(() => { 
                 document.getElementById('openingModal').classList.add('hide'); 
                 showClaimModal(); 
             }, 4000);
         }
 
-        /* ==========================================
+        /* =========================================================
            4. ระบบรับแต้มและจัดอันดับ
-           ========================================== */
+           ========================================================= */
         let claimTimer;
         function showClaimModal() {
             document.getElementById('claimModal').classList.remove('hide'); 
-            document.getElementById('claimStudentId').value = '';
+            const inputEl = document.getElementById('claimStudentId');
+            inputEl.value = '';
             document.getElementById('studentFoundBadge').classList.add('hide'); 
             document.getElementById('studentNotFoundBadge').classList.add('hide');
             document.getElementById('btnSubmitClaim').disabled = true; 
-            document.getElementById('btnSubmitClaim').className = "flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
-            document.getElementById('claimStudentId').focus();
+            document.getElementById('btnSubmitClaim').className = "flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
+            setTimeout(() => inputEl.focus(), 100);
             
             let time = 15; 
             document.getElementById('claimCountdown').innerText = time;
@@ -634,7 +701,7 @@
         function skipClaim() { 
             clearInterval(claimTimer); 
             document.getElementById('claimModal').classList.add('hide'); 
-            setTimeout(() => isProcessing = false, 1500); 
+            setTimeout(() => isProcessing = false, 1200); 
         }
 
         function checkStudentId() {
@@ -646,18 +713,18 @@
                     document.getElementById('studentNotFoundBadge').classList.add('hide');
                     document.getElementById('claimStudentNameDisplay').innerText = studentsDB[sid].name;
                     btn.disabled = false; 
-                    btn.className = "flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-white transition";
+                    btn.className = "flex-1 py-3.5 rounded-xl bg-emerald-600 active:bg-emerald-500 font-semibold text-white transition";
                 } else {
                     document.getElementById('studentFoundBadge').classList.add('hide'); 
                     document.getElementById('studentNotFoundBadge').classList.remove('hide');
                     btn.disabled = true; 
-                    btn.className = "flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
+                    btn.className = "flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
                 }
             } else {
                 document.getElementById('studentFoundBadge').classList.add('hide'); 
                 document.getElementById('studentNotFoundBadge').classList.add('hide');
                 btn.disabled = true; 
-                btn.className = "flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
+                btn.className = "flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
             }
         }
 
@@ -686,27 +753,28 @@
             if(!list) return;
             const sorted = Object.entries(studentsDB).sort((a,b) => (b[1].points || 0) - (a[1].points || 0)).slice(0, 10);
             list.innerHTML = sorted.map((s, i) => `
-                <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-center p-3 bg-slate-800/60 rounded-xl border border-slate-700">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-sm text-emerald-400">${i+1}</div>
+                        <div class="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center font-bold text-xs text-emerald-400">${i+1}</div>
                         <div>
                             <p class="font-semibold text-sm text-white">${s[1].name}</p>
                             <p class="text-xs text-slate-400 font-mono">${s[0]} • ${s[1].dept || 'ไม่ระบุ'}</p>
                         </div>
                     </div>
-                    <div class="font-bold text-emerald-400">${s[1].points || 0} Pts</div>
+                    <div class="font-bold text-sm text-emerald-400">${s[1].points || 0} Pts</div>
                 </div>
             `).join('');
         }
 
-        /* ==========================================
-           5. โหมด Admin (จัดการฐานข้อมูลและ Excel)
-           ========================================== */
+        /* =========================================================
+           5. โหมด Admin (จัดการฐานข้อมูล ตั้งค่า IP และ Excel)
+           ========================================================= */
         let chartInst1 = null, chartInst2 = null;
         function showAdminLogin() { 
             document.getElementById('adminLoginModal').classList.remove('hide'); 
-            document.getElementById('adminPassword').value = ''; 
-            document.getElementById('adminPassword').focus();
+            const passEl = document.getElementById('adminPassword');
+            passEl.value = ''; 
+            setTimeout(() => passEl.focus(), 100);
         }
         function verifyAdmin() { 
             if(document.getElementById('adminPassword').value === adminPass) { 
@@ -719,10 +787,10 @@
         function switchAdminTab(tabName) {
             ['dashboard', 'database', 'settings'].forEach(t => { 
                 document.getElementById('admin-'+t).classList.add('hide'); 
-                document.getElementById('tab-'+t).className = "w-full text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100 transition"; 
+                document.getElementById('tab-'+t).className = "whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100 transition"; 
             });
             document.getElementById('admin-'+tabName).classList.remove('hide'); 
-            document.getElementById('tab-'+tabName).className = "w-full text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700 transition";
+            document.getElementById('tab-'+tabName).className = "whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700 transition";
             renderAdmin();
         }
 
@@ -767,13 +835,13 @@
 
             document.getElementById('studentTableBody').innerHTML = Object.entries(studentsDB).map(([id, data]) => `
                 <tr class="hover:bg-gray-50 border-b">
-                    <td class="px-4 py-2 font-mono">${id}</td>
-                    <td class="px-4 py-2 font-semibold">${data.name}</td>
-                    <td class="px-4 py-2 text-gray-600">${data.dept || 'ไม่ระบุ'}</td>
-                    <td class="px-4 py-2 text-center font-bold text-emerald-600">${data.points || 0}</td>
-                    <td class="px-4 py-2 text-center print-hide">
-                        <button onclick="openEditModal('${id}')" class="text-blue-600 border border-blue-200 px-3 py-1 rounded bg-blue-50 mr-1 hover:bg-blue-100 transition text-xs font-semibold">แก้ไข</button>
-                        <button onclick="deleteStudent('${id}')" class="text-red-600 border border-red-200 px-3 py-1 rounded bg-red-50 hover:bg-red-100 transition text-xs font-semibold">ลบ</button>
+                    <td class="px-3 md:px-4 py-2.5 font-mono text-xs md:text-sm">${id}</td>
+                    <td class="px-3 md:px-4 py-2.5 font-semibold text-xs md:text-sm">${data.name}</td>
+                    <td class="px-3 md:px-4 py-2.5 text-gray-600 text-xs md:text-sm">${data.dept || 'ไม่ระบุ'}</td>
+                    <td class="px-3 md:px-4 py-2.5 text-center font-bold text-emerald-600">${data.points || 0}</td>
+                    <td class="px-3 md:px-4 py-2.5 text-center print-hide whitespace-nowrap">
+                        <button onclick="openEditModal('${id}')" class="text-blue-600 border border-blue-200 px-2.5 py-1 rounded bg-blue-50 mr-1 active:bg-blue-100 transition text-xs font-semibold">แก้ไข</button>
+                        <button onclick="deleteStudent('${id}')" class="text-red-600 border border-red-200 px-2.5 py-1 rounded bg-red-50 active:bg-red-100 transition text-xs font-semibold">ลบ</button>
                     </td>
                 </tr>
             `).join('');
@@ -915,7 +983,7 @@
             if(newPass.length < 4) return alert("รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร");
             adminPass = newPass;
             localStorage.setItem('swg_admin_pass', newPass); 
-            syncDB(); // ซิงค์รหัสผ่านแอดมินขึ้น Cloud
+            syncDB();
             document.getElementById('newAdminPassword').value = ''; 
             alert("เปลี่ยนรหัสผ่านแอดมินและซิงค์เรียบร้อยแล้ว!"); 
         }
