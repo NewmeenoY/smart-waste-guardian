@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ผู้พิทักษ์การคัดแยกขยะอัจฉริยะ (Smart Waste Guardian)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .hide { display: none !important; }
+        
+        .video-container { 
+            position: relative; 
+            width: 100%; 
+            aspect-ratio: 16/9; 
+            max-height: 65vh; 
+            margin: 0 auto; 
+            background: #000; 
+            border-radius: 1rem; 
+            overflow: hidden; 
+        }
+        video, canvas { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+        }
+        canvas { z-index: 10; }
+        
+        @media print {
+            body { background: white; color: black; }
+            #viewAdmin header, .print-hide, #admin-settings { display: none !important; }
+            #viewAdmin { min-height: auto; }
+            .shadow-sm, .border { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen selection:bg-emerald-500 selection:text-white">
+
+    <!-- 1. หน้าต่าง Gateway -->
+    <div id="viewGateway" class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-emerald-400 mb-2">Smart Waste Guardian</h1>
+            <h2 class="text-2xl font-semibold mb-4">ผู้พิทักษ์การคัดแยกขยะอัจฉริยะ</h2>
+            <p class="text-slate-400">จัดทำโดย วิทยาลัยสารพัดช่างบรรหาร-แจ่มใส จังหวัดสุพรรณบุรี</p>
+        </div>
+        <div class="flex flex-col md:flex-row gap-4 w-full max-w-2xl justify-center">
+            <button onclick="switchView('kiosk')" class="flex-1 glass p-8 rounded-2xl hover:bg-emerald-600/20 transition border-emerald-500/30 group">
+                <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">♻️</div>
+                <h3 class="text-xl font-bold text-emerald-400">เข้าสู่โหมดหน้าตู้ (Kiosk)</h3>
+                <p class="text-sm text-slate-400 mt-2">สำหรับจุดสแกนและคัดแยกขยะ</p>
+            </button>
+            <button onclick="showAdminLogin()" class="flex-1 glass p-8 rounded-2xl hover:bg-blue-600/20 transition border-blue-500/30 group">
+                <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">📊</div>
+                <h3 class="text-xl font-bold text-blue-400">ระบบจัดการหลังบ้าน (Admin)</h3>
+                <p class="text-sm text-slate-400 mt-2">สำหรับผู้ดูแลระบบและดูสถิติ</p>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: รหัสผ่านเข้าหลังบ้าน -->
+    <div id="adminLoginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hide">
+        <div class="bg-slate-800 p-8 rounded-2xl w-full max-w-sm border border-slate-700 text-center">
+            <h3 class="text-xl font-bold mb-4">เข้าสู่ระบบผู้ดูแล</h3>
+            <input type="password" id="adminPassword" placeholder="รหัสผ่าน" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 mb-4 text-center focus:outline-none focus:border-emerald-500">
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('adminLoginModal').classList.add('hide')" class="flex-1 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold">ยกเลิก</button>
+                <button onclick="verifyAdmin()" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. โหมด Kiosk -->
+    <div id="viewKiosk" class="hide min-h-screen bg-slate-900 flex flex-col">
+        <header class="glass px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+            <div>
+                <h1 class="text-xl font-bold text-emerald-400">Smart Waste Guardian</h1>
+                <p class="text-xs text-slate-400">วิทยาลัยสารพัดช่างบรรหาร-แจ่มใส จ.สุพรรณบุรี</p>
+            </div>
+            <button onclick="switchView('gateway')" class="text-sm bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg transition">กลับหน้าหลัก</button>
+        </header>
+
+        <main class="flex-1 p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto w-full">
+            <div class="lg:col-span-2 space-y-4">
+                <div class="glass p-4 rounded-2xl border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="font-semibold text-lg flex items-center gap-2">
+                            <span id="aiStatusDot" class="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></span>
+                            <span id="aiStatusText">ระบบกำลังเตรียมกล้อง AI...</span>
+                        </h2>
+                    </div>
+                    
+                    <div class="video-container border-2 border-slate-700 shadow-inner">
+                        <video id="webcam" autoplay playsinline muted></video>
+                        <canvas id="canvas"></canvas>
+                        <div class="absolute inset-0 border-2 border-dashed border-white/20 m-12 rounded-xl pointer-events-none z-20"></div>
+                    </div>
+
+                    <div class="mt-4 flex justify-between items-center bg-slate-800/50 p-3 rounded-xl">
+                        <div>
+                            <p class="text-sm text-slate-400">วัตถุที่ตรวจพบ:</p>
+                            <p id="detectResult" class="text-lg font-bold text-emerald-400">กำลังค้นหาขยะ...</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="manualTrigger('recycle')" class="px-4 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white rounded-lg text-sm border border-emerald-500/50 transition">รีไซเคิล</button>
+                            <button onclick="manualTrigger('general')" class="px-4 py-2 bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white rounded-lg text-sm border border-amber-500/50 transition">ขยะทั่วไป</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass p-6 rounded-2xl flex flex-col">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">🏆 ทำเนียบคนรักษ์โลก</h2>
+                <div id="leaderboardList" class="flex-1 overflow-y-auto space-y-3 pr-2"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: กำลังเปิดฝาถัง -->
+    <div id="openingModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center hide">
+        <div class="text-8xl mb-6 animate-bounce" id="binIcon">🗑️</div>
+        <h2 class="text-3xl font-bold text-emerald-400 mb-2" id="binTitle">กำลังเปิดฝาถัง...</h2>
+        <p class="text-xl text-slate-300">กรุณาทิ้งขยะลงถัง</p>
+        <div class="w-64 h-2 bg-slate-800 rounded-full mt-8 overflow-hidden">
+            <div class="h-full bg-emerald-500 w-full origin-left animate-[shrink_4s_linear]"></div>
+        </div>
+    </div>
+
+    <!-- Modal: สะสมแต้ม -->
+    <div id="claimModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hide">
+        <div class="bg-slate-800 p-8 rounded-3xl w-full max-w-md border border-slate-700 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
+            <div class="text-center mb-6">
+                <div class="text-5xl mb-2">🎉</div>
+                <h2 class="text-2xl font-bold text-white">คุณได้รับ +10 แต้ม!</h2>
+                <p class="text-slate-400 mt-1">กรอกรหัสนักศึกษาเพื่อสะสมแต้ม</p>
+            </div>
+            
+            <div class="space-y-4">
+                <input type="text" id="claimStudentId" oninput="checkStudentId()" placeholder="รหัสนักศึกษา" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 text-center text-lg" maxlength="20">
+                
+                <div id="studentFoundBadge" class="bg-emerald-900/30 border border-emerald-500/30 text-emerald-400 p-3 rounded-xl text-center text-sm hide">
+                    ยินดีต้อนรับ, <strong id="claimStudentNameDisplay">ชื่อ</strong>
+                </div>
+
+                <div id="studentNotFoundBadge" class="bg-red-900/30 border border-red-500/30 text-red-400 p-3 rounded-xl text-center text-sm hide">
+                    ⚠️ ไม่มีข้อมูลในระบบ กรุณาติดต่อผู้ดูแล
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="skipClaim()" class="flex-1 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold text-slate-300">ไม่เป็นไร (ข้าม)</button>
+                    <button id="btnSubmitClaim" onclick="submitClaim()" class="flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed transition" disabled>รับแต้ม</button>
+                </div>
+            </div>
+            <p class="text-center text-xs text-slate-500 mt-4">ปิดอัตโนมัติใน <span id="claimCountdown">15</span> วินาที</p>
+        </div>
+    </div>
+
+    <!-- 3. โหมด Admin (หลังบ้าน) -->
+    <div id="viewAdmin" class="hide min-h-screen bg-gray-50 text-slate-800">
+        <header class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
+            <h1 class="text-xl font-bold text-emerald-600">Smart Waste Guardian | Admin Dashboard</h1>
+            <div class="flex gap-3 print-hide">
+                <button onclick="window.print()" class="text-sm bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg transition">🖨️ พิมพ์ PDF</button>
+                <button onclick="switchView('gateway')" class="text-sm bg-slate-800 text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition">ออกจากระบบ</button>
+            </div>
+        </header>
+
+        <main class="p-4 md:p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div class="lg:col-span-1 space-y-2 print-hide">
+                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="w-full text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700 transition">📊 ภาพรวมสถิติ</button>
+                <button onclick="switchAdminTab('database')" id="tab-database" class="w-full text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">👥 ฐานข้อมูลนักศึกษา</button>
+                <button onclick="switchAdminTab('settings')" id="tab-settings" class="w-full text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">⚙️ ตั้งค่าระบบ</button>
+            </div>
+
+            <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[500px]">
+                
+                <div id="admin-dashboard" class="space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h2 class="text-2xl font-bold">สถิติและรายงานผล (Real-time)</h2>
+                        <select id="timeFilter" onchange="renderAdmin()" class="border border-gray-300 rounded-lg px-4 py-2 bg-white print-hide outline-none">
+                            <option value="all">สรุปข้อมูลทั้งหมด</option>
+                            <option value="day">วันนี้</option>
+                            <option value="month">เดือนนี้</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="border rounded-xl p-4 flex flex-col items-center justify-center bg-gray-50">
+                            <h3 class="font-semibold text-gray-600 mb-2">สัดส่วนประเภทขยะ</h3>
+                            <canvas id="statChart" class="max-h-48"></canvas>
+                        </div>
+                        <div class="border rounded-xl p-4 md:col-span-2 bg-gray-50">
+                            <h3 class="font-semibold text-gray-600 mb-2">แต้มสะสมแยกตามแผนกวิชา</h3>
+                            <canvas id="deptChart" class="max-h-48 w-full"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-sm text-emerald-600 font-medium">ขยะรีไซเคิลรวม (ชิ้น)</p>
+                                <p id="statRecycle" class="text-3xl font-bold text-emerald-700 mt-1">0</p>
+                            </div>
+                            <div class="text-4xl">♻️</div>
+                        </div>
+                        <div class="bg-amber-50 rounded-xl p-4 border border-amber-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-sm text-amber-600 font-medium">ขยะทั่วไปรวม (ชิ้น)</p>
+                                <p id="statGeneral" class="text-3xl font-bold text-amber-700 mt-1">0</p>
+                            </div>
+                            <div class="text-4xl">🗑️</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="admin-database" class="hide space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h2 class="text-2xl font-bold">ฐานข้อมูลนักศึกษา</h2>
+                        <div class="flex gap-2 print-hide">
+                            <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" class="hidden" onchange="importExcel(event)">
+                            <button onclick="document.getElementById('excelUpload').click()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium">📥 นำเข้า Excel</button>
+                            <button onclick="exportExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">📤 ส่งออก Excel</button>
+                            <button onclick="toggleAddStudentForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">+ เพิ่มนักศึกษา</button>
+                        </div>
+                    </div>
+                    
+                    <div id="addStudentForm" class="hide bg-gray-50 p-4 rounded-xl border space-y-4 print-hide">
+                        <h3 class="font-bold">ลงทะเบียนนักศึกษาใหม่</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <input type="text" id="newDbId" placeholder="รหัสนักศึกษา" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            <input type="text" id="newDbName" placeholder="ชื่อ-นามสกุล" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            <input type="text" id="newDbDept" placeholder="แผนกวิชา" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            <button onclick="adminAddStudent()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-emerald-700">บันทึกข้อมูล</button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border rounded-xl">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-100 border-b">
+                                <tr>
+                                    <th class="px-4 py-3">รหัสนักศึกษา</th>
+                                    <th class="px-4 py-3">ชื่อ-นามสกุล</th>
+                                    <th class="px-4 py-3">แผนกวิชา</th>
+                                    <th class="px-4 py-3 text-center">แต้มสะสม</th>
+                                    <th class="px-4 py-3 text-center print-hide">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="admin-settings" class="hide space-y-6">
+                    <h2 class="text-2xl font-bold">ตั้งค่าระบบ (Settings)</h2>
+                    
+                    <div class="max-w-md bg-gray-50 p-6 rounded-xl border">
+                        <label class="block text-sm font-semibold mb-2">เชื่อมต่อบอร์ด ESP32-S3 (IP Address)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="adminEspIp" placeholder="เช่น 192.168.1.100" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 outline-none">
+                            <button onclick="saveIp()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition">บันทึก IP</button>
+                        </div>
+                    </div>
+
+                    <div class="max-w-md bg-gray-50 p-6 rounded-xl border">
+                        <label class="block text-sm font-semibold mb-2">เปลี่ยนรหัสผ่านแอดมิน (Admin Password)</label>
+                        <div class="flex gap-2">
+                            <input type="password" id="newAdminPassword" placeholder="รหัสผ่านใหม่" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 outline-none">
+                            <button onclick="saveAdminPassword()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">เปลี่ยนรหัส</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: แก้ไขข้อมูล -->
+    <div id="editModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hide print-hide">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-sm border shadow-2xl">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">แก้ไขข้อมูลนักศึกษา</h3>
+            <div class="space-y-3">
+                <input type="text" id="editSid" readonly class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-gray-500 text-sm">
+                <input type="text" id="editName" placeholder="ชื่อ-นามสกุล" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 outline-none">
+                <input type="text" id="editDept" placeholder="แผนกวิชา" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 outline-none">
+                <input type="number" id="editPoints" placeholder="แต้มสะสม" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 outline-none">
+            </div>
+            <div class="flex gap-2 mt-5">
+                <button onclick="document.getElementById('editModal').classList.add('hide')" class="flex-1 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold text-gray-700 transition">ยกเลิก</button>
+                <button onclick="saveEditStudent()" class="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 font-semibold text-white transition">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================
+           1. ระบบฐานข้อมูล (Local Database & Sync)
+           ========================================== */
+        const defaultStudents = {
+            "67202040001": { name: "วงศธร", dept: "เทคโนโลยีธุรกิจดิจิทัล", points: 150 },
+            "67202040002": { name: "กนกลักษณ์ สุขประเสริฐ", dept: "เทคโนโลยีธุรกิจดิจิทัล", points: 120 }
+        };
+
+        function getDB(key, defaultData) { return JSON.parse(localStorage.getItem(key)) || defaultData; }
+        function saveDB(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+
+        let studentsDB = getDB('swg_students', defaultStudents);
+        let historyDB = getDB('swg_history', []);
+        let espIP = localStorage.getItem('swg_esp_ip') || '192.168.1.100';
+        let adminPass = localStorage.getItem('swg_admin_pass') || 'admin1234';
+        let activeView = 'gateway'; // เก็บสถานะหน้าจอปัจจุบัน
+
+        window.addEventListener('storage', (e) => {
+            if(e.key === 'swg_students' || e.key === 'swg_history') {
+                studentsDB = getDB('swg_students', defaultStudents);
+                historyDB = getDB('swg_history', []);
+                if(activeView === 'kiosk') renderLeaderboard();
+                if(activeView === 'admin') renderAdmin();
+            }
+        });
+
+        /* ==========================================
+           2. ระบบสลับหน้าเว็บ (Navigation)
+           ========================================== */
+        function switchView(viewId) {
+            document.getElementById('viewGateway').classList.add('hide');
+            document.getElementById('viewKiosk').classList.add('hide');
+            document.getElementById('viewAdmin').classList.add('hide');
+            activeView = viewId;
+            
+            if(viewId === 'gateway') document.getElementById('viewGateway').classList.remove('hide');
+            else if(viewId === 'kiosk') {
+                document.getElementById('viewKiosk').classList.remove('hide');
+                startAI();
+                renderLeaderboard();
+            }
+            else if(viewId === 'admin') {
+                document.getElementById('viewAdmin').classList.remove('hide');
+                renderAdmin();
+            }
+        }
+
+        /* ==========================================
+           3. โหมด Kiosk (AI Camera - Optimized for Performance)
+           ========================================== */
+        let model, isProcessing = false;
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let lastFrameTime = 0;
+
+        async function startAI() {
+            if(model) return;
+            try {
+                // เปิด WebGL ให้ GPU ช่วยประมวลผล (ลดภาระ CPU)
+                await tf.setBackend('webgl');
+                
+                // ลดความละเอียดกล้องเหลือ 640x480 เพื่อลดความหน่วง
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } } 
+                });
+                video.srcObject = stream;
+                video.onloadedmetadata = async () => {
+                    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                    document.getElementById('aiStatusText').innerText = "กำลังโหลดสมองกล AI...";
+                    model = await cocoSsd.load();
+                    document.getElementById('aiStatusText').innerText = "กล้องพร้อมใช้งาน 100%";
+                    document.getElementById('aiStatusDot').classList.replace('bg-yellow-400', 'bg-emerald-400');
+                    requestAnimationFrame(detectLoop);
+                };
+            } catch(e) {
+                document.getElementById('aiStatusText').innerText = "กรุณาเปิดสิทธิ์กล้อง";
+            }
+        }
+
+        async function detectLoop(timestamp) {
+            // หยุดการสแกนถ้าไม่ได้อยู่หน้า Kiosk หรือกำลังประมวลผลเปิดถัง
+            if(!model || video.readyState !== 4 || isProcessing || activeView !== 'kiosk') {
+                requestAnimationFrame(detectLoop);
+                return;
+            }
+            
+            // Limit AI Scanner to ~4-5 FPS เพื่อแก้ปัญหาเว็บหน่วง
+            if (timestamp - lastFrameTime < 200) { 
+                requestAnimationFrame(detectLoop);
+                return;
+            }
+            lastFrameTime = timestamp;
+            
+            try {
+                const predictions = await model.detect(video);
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+                
+                let detected = null;
+                predictions.forEach(p => {
+                    if(p.class === 'person') return;
+                    if(p.score > 0.6) detected = p;
+                    
+                    ctx.strokeStyle = "#10b981"; ctx.lineWidth = 4;
+                    ctx.strokeRect(p.bbox[0], p.bbox[1], p.bbox[2], p.bbox[3]);
+                    ctx.fillStyle = "#10b981"; ctx.font = "bold 24px Kanit";
+                    ctx.fillText(`${p.class} (${Math.round(p.score*100)}%)`, p.bbox[0], p.bbox[1] > 20 ? p.bbox[1]-5 : 20);
+                });
+
+                if(detected) {
+                    const recycleClasses = ['bottle', 'cup', 'wine glass', 'book', 'paper'];
+                    triggerBin(recycleClasses.includes(detected.class) ? 'recycle' : 'general');
+                }
+            } catch(e) {}
+            
+            requestAnimationFrame(detectLoop);
+        }
+
+        function manualTrigger(type) { triggerBin(type); }
+
+        let currentTrashType = "";
+        function triggerBin(type) {
+            if(isProcessing) return;
+            isProcessing = true; // ล็อก AI หยุดสแกนชั่วคราว ลดหน่วง
+            currentTrashType = type;
+            
+            try { fetch(`http://${espIP}/open?type=${type}`, { mode: 'no-cors' }); } catch(e){}
+            
+            document.getElementById('binTitle').innerText = type === 'recycle' ? "♻️ เปิดถังรีไซเคิล" : "🗑️ เปิดถังขยะทั่วไป";
+            document.getElementById('openingModal').classList.remove('hide');
+            ctx.clearRect(0,0, canvas.width, canvas.height); // ล้างกรอบเขียว
+            
+            setTimeout(() => {
+                document.getElementById('openingModal').classList.add('hide');
+                showClaimModal();
+            }, 4000);
+        }
+
+        /* ==========================================
+           4. ระบบรับแต้ม (Strict Validation)
+           ========================================== */
+        let claimTimer;
+        function showClaimModal() {
+            document.getElementById('claimModal').classList.remove('hide');
+            document.getElementById('claimStudentId').value = '';
+            document.getElementById('studentFoundBadge').classList.add('hide');
+            document.getElementById('studentNotFoundBadge').classList.add('hide');
+            setClaimButtonState(false);
+            document.getElementById('claimStudentId').focus();
+            
+            let time = 15;
+            document.getElementById('claimCountdown').innerText = time;
+            claimTimer = setInterval(() => {
+                time--; document.getElementById('claimCountdown').innerText = time;
+                if(time <= 0) skipClaim();
+            }, 1000);
+        }
+
+        function skipClaim() {
+            clearInterval(claimTimer);
+            document.getElementById('claimModal').classList.add('hide');
+            setTimeout(() => isProcessing = false, 1500); 
+        }
+
+        function setClaimButtonState(isActive) {
+            const btn = document.getElementById('btnSubmitClaim');
+            if(isActive) {
+                btn.disabled = false;
+                btn.className = "flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-white transition";
+            } else {
+                btn.disabled = true;
+                btn.className = "flex-1 py-3 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed transition";
+            }
+        }
+
+        function checkStudentId() {
+            const sid = document.getElementById('claimStudentId').value.trim();
+            const badgeFound = document.getElementById('studentFoundBadge');
+            const badgeNotFound = document.getElementById('studentNotFoundBadge');
+            
+            if(sid.length > 0) {
+                if(studentsDB[sid]) {
+                    badgeFound.classList.remove('hide');
+                    badgeNotFound.classList.add('hide');
+                    document.getElementById('claimStudentNameDisplay').innerText = studentsDB[sid].name;
+                    setClaimButtonState(true);
+                } else {
+                    badgeFound.classList.add('hide');
+                    badgeNotFound.classList.remove('hide');
+                    setClaimButtonState(false);
+                }
+            } else {
+                badgeFound.classList.add('hide');
+                badgeNotFound.classList.add('hide');
+                setClaimButtonState(false);
+            }
+        }
+
+        function submitClaim() {
+            const sid = document.getElementById('claimStudentId').value.trim();
+            if(!sid || !studentsDB[sid]) return skipClaim(); 
+
+            studentsDB[sid].points += 10;
+            historyDB.unshift({ timestamp: Date.now(), time: new Date().toLocaleString('th-TH'), sid: sid, name: studentsDB[sid].name, type: currentTrashType === 'recycle' ? 'รีไซเคิล' : 'ทั่วไป', points: 10 });
+
+            saveDB('swg_students', studentsDB); saveDB('swg_history', historyDB);
+            try { fetch(`http://${espIP}/open?type=${currentTrashType}&sid=${sid}`, { mode: 'no-cors' }); } catch(e){}
+            renderLeaderboard(); skipClaim();
+        }
+
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboardList');
+            const sorted = Object.entries(studentsDB).sort((a,b) => b[1].points - a[1].points).slice(0, 10);
+            list.innerHTML = sorted.map((s, i) => `
+                <div class="flex justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                    <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold">${i+1}</div>
+                    <div><p class="font-semibold text-sm">${s[1].name}</p><p class="text-xs text-slate-400">${s[0]}</p></div></div>
+                    <div class="font-bold text-emerald-400">${s[1].points} Pts</div>
+                </div>
+            `).join('');
+        }
+
+        /* ==========================================
+           5. โหมด Admin
+           ========================================== */
+        let chartInst1 = null, chartInst2 = null;
+
+        function showAdminLogin() {
+            document.getElementById('adminLoginModal').classList.remove('hide');
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function verifyAdmin() {
+            if(document.getElementById('adminPassword').value === adminPass) {
+                document.getElementById('adminLoginModal').classList.add('hide');
+                switchView('admin');
+            } else { alert("รหัสผ่านไม่ถูกต้อง!"); }
+        }
+
+        function switchAdminTab(tabName) {
+            ['dashboard', 'database', 'settings'].forEach(t => {
+                document.getElementById('admin-'+t).classList.add('hide');
+                document.getElementById('tab-'+t).className = "w-full text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100 transition";
+            });
+            document.getElementById('admin-'+tabName).classList.remove('hide');
+            document.getElementById('tab-'+tabName).className = "w-full text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700 transition";
+            if(tabName === 'dashboard' || tabName === 'database') renderAdmin();
+        }
+
+        function renderAdmin() {
+            const filter = document.getElementById('timeFilter').value;
+            const now = new Date();
+            const filteredHist = historyDB.filter(h => {
+                if(!h.timestamp) return true; 
+                const d = new Date(h.timestamp);
+                if(filter === 'day') return d.toDateString() === now.toDateString();
+                if(filter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                return true; 
+            });
+            
+            let rec = 0, gen = 0;
+            filteredHist.forEach(h => { if(h.type === 'รีไซเคิล') rec++; else gen++; });
+            
+            document.getElementById('statRecycle').innerText = rec;
+            document.getElementById('statGeneral').innerText = gen;
+
+            if(chartInst1) chartInst1.destroy();
+            chartInst1 = new Chart(document.getElementById('statChart').getContext('2d'), {
+                type: 'doughnut', data: { labels: ['รีไซเคิล', 'ทั่วไป'], datasets: [{ data: [rec, gen], backgroundColor: ['#10b981', '#f59e0b'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const deptStats = {};
+            Object.values(studentsDB).forEach(s => { deptStats[s.dept] = (deptStats[s.dept]||0) + s.points; });
+            if(chartInst2) chartInst2.destroy();
+            chartInst2 = new Chart(document.getElementById('deptChart').getContext('2d'), {
+                type: 'bar', data: { labels: Object.keys(deptStats), datasets: [{ label: 'แต้มสะสม', data: Object.values(deptStats), backgroundColor: '#3b82f6', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            document.getElementById('studentTableBody').innerHTML = Object.entries(studentsDB).map(([id, data]) => `
+                <tr class="hover:bg-gray-50 border-b">
+                    <td class="px-4 py-2 font-mono">${id}</td>
+                    <td class="px-4 py-2 font-semibold">${data.name}</td>
+                    <td class="px-4 py-2 text-gray-600">${data.dept}</td>
+                    <td class="px-4 py-2 text-center font-bold text-emerald-600">${data.points}</td>
+                    <td class="px-4 py-2 text-center print-hide">
+                        <button onclick="openEditModal('${id}')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-2 border border-blue-200 px-2 py-1 rounded bg-blue-50">แก้ไข</button>
+                        <button onclick="deleteStudent('${id}')" class="text-red-600 hover:text-red-800 text-xs font-semibold border border-red-200 px-2 py-1 rounded bg-red-50">ลบ</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('adminEspIp').value = espIP;
+        }
+
+        function toggleAddStudentForm() { document.getElementById('addStudentForm').classList.toggle('hide'); }
+
+        function adminAddStudent() {
+            const sid = document.getElementById('newDbId').value.trim();
+            const name = document.getElementById('newDbName').value.trim();
+            if(!sid || !name) return alert("กรุณากรอกรหัสและชื่อ");
+            
+            studentsDB[sid] = { name, dept: document.getElementById('newDbDept').value.trim() || 'ไม่ระบุ', points: 0 };
+            saveDB('swg_students', studentsDB);
+            renderAdmin(); toggleAddStudentForm();
+            document.getElementById('newDbId').value = ''; document.getElementById('newDbName').value = '';
+        }
+
+        function openEditModal(sid) {
+            const s = studentsDB[sid];
+            document.getElementById('editSid').value = sid; document.getElementById('editName').value = s.name;
+            document.getElementById('editDept').value = s.dept; document.getElementById('editPoints').value = s.points;
+            document.getElementById('editModal').classList.remove('hide');
+        }
+
+        function saveEditStudent() {
+            const sid = document.getElementById('editSid').value;
+            studentsDB[sid] = { name: document.getElementById('editName').value, dept: document.getElementById('editDept').value, points: parseInt(document.getElementById('editPoints').value) || 0 };
+            saveDB('swg_students', studentsDB); renderAdmin(); document.getElementById('editModal').classList.add('hide');
+        }
+
+        function deleteStudent(sid) {
+            if(confirm(`ยืนยันการลบข้อมูลของ ${studentsDB[sid].name} ออกจากระบบ?`)) {
+                delete studentsDB[sid]; saveDB('swg_students', studentsDB); renderAdmin();
+            }
+        }
+
+        function saveIp() { espIP = document.getElementById('adminEspIp').value; localStorage.setItem('swg_esp_ip', espIP); alert("บันทึก IP สำเร็จ!"); }
+        function saveAdminPassword() {
+            const newPass = document.getElementById('newAdminPassword').value.trim();
+            if(newPass.length < 4) return alert("รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร");
+            localStorage.setItem('swg_admin_pass', newPass); adminPass = newPass;
+            document.getElementById('newAdminPassword').value = ''; alert("เปลี่ยนรหัสผ่านแอดมินเรียบร้อยแล้ว!");
+        }
+
+        function exportExcel() {
+            const dataArray = Object.entries(studentsDB).map(([id, data]) => ({"รหัสนักศึกษา": id, "ชื่อ-นามสกุล": data.name, "แผนกวิชา": data.dept, "แต้มสะสม": data.points}));
+            const ws = XLSX.utils.json_to_sheet(dataArray); const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Database"); XLSX.writeFile(wb, "SmartWaste.xlsx");
+        }
+        function importExcel(e) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).Sheets[XLSX.read(new Uint8Array(e.target.result), {type: 'array'}).SheetNames[0]]).forEach(row => {
+                    const sid = row['รหัสนักศึกษา'] || row['ID']; const name = row['ชื่อ-นามสกุล'] || row['Name'];
+                    if(sid && name) studentsDB[sid] = { name, dept: row['แผนกวิชา'] || 'ไม่ระบุ', points: parseInt(row['แต้มสะสม']) || 0 };
+                });
+                saveDB('swg_students', studentsDB); renderAdmin(); alert("นำเข้าสำเร็จ!");
+            };
+            if(e.target.files[0]) reader.readAsArrayBuffer(e.target.files[0]);
+        }
+    </script>
+</body>
+</html>
