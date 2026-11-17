@@ -27,72 +27,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        * { 
-            -webkit-tap-highlight-color: transparent; 
-            -webkit-touch-callout: none;
-            box-sizing: border-box;
-        }
-        html, body { 
-            font-family: 'Kanit', sans-serif; 
-            touch-action: manipulation; 
-            overscroll-behavior: none; 
-            -webkit-font-smoothing: antialiased;
-            min-height: 100dvh;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
-        }
-        .glass { 
-            background: rgba(15, 23, 42, 0.86); 
-            -webkit-backdrop-filter: blur(8px); 
-            backdrop-filter: blur(8px); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-        }
+        * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; box-sizing: border-box; }
+        html, body { font-family: 'Kanit', sans-serif; touch-action: manipulation; overscroll-behavior: none; -webkit-font-smoothing: antialiased; min-height: 100dvh; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+        .glass { background: rgba(15, 23, 42, 0.86); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .hide { display: none !important; }
         
-        .video-container { 
-            position: relative; 
-            width: 100%; 
-            aspect-ratio: 4/3; 
-            max-height: 54dvh; 
-            margin: 0 auto; 
-            background: #000; 
-            border-radius: 1rem; 
-            overflow: hidden; 
-            transform: translate3d(0, 0, 0);
-            -webkit-transform: translate3d(0, 0, 0);
-            will-change: transform;
-        }
-        @media (min-width: 768px) {
-            .video-container { aspect-ratio: 16/9; max-height: 64dvh; }
-        }
-        video, canvas { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            object-fit: cover; 
-            transform: translate3d(0, 0, 0);
-        }
+        .video-container { position: relative; width: 100%; aspect-ratio: 4/3; max-height: 50dvh; margin: 0 auto; background: #000; border-radius: 1rem; overflow: hidden; transform: translate3d(0, 0, 0); -webkit-transform: translate3d(0, 0, 0); will-change: transform; }
+        @media (min-width: 768px) { .video-container { aspect-ratio: 16/9; max-height: 60dvh; } }
+        video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: translate3d(0, 0, 0); }
         canvas { z-index: 10; pointer-events: none; }
         
-        .ios-scroll {
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
-        }
-
-        input, select, button { 
-            font-size: 16px !important; 
-            -webkit-appearance: none;
-            appearance: none;
-        }
-        
-        @media print { 
-            body { background: white; color: black; } 
-            #viewAdmin header, .print-hide, #admin-settings { display: none !important; } 
-            #viewAdmin { min-height: auto; } 
-            .shadow-sm, .border { box-shadow: none; border: 1px solid #ddd; } 
-        }
+        .ios-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+        input, select, button { font-size: 16px !important; -webkit-appearance: none; appearance: none; }
+        @media print { body { background: white; color: black; } #viewAdmin header, .print-hide, #admin-settings { display: none !important; } #viewAdmin { min-height: auto; } .shadow-sm, .border { box-shadow: none; border: 1px solid #ddd; } }
     </style>
 </head>
 <body class="bg-slate-900 text-white selection:bg-emerald-500 selection:text-white relative">
@@ -100,9 +47,7 @@
     <!-- 1. Gateway -->
     <div id="viewGateway" class="min-h-[100dvh] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
         <div class="text-center mb-8 px-2">
-            <div class="inline-flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-xs px-3 py-1 rounded-full mb-3">
-                🔒 ระบบรักษาความปลอดภัยขั้นสูง (Secured Mode)
-            </div>
+            <div class="inline-flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-xs px-3 py-1 rounded-full mb-3">🔒 ระบบรักษาความปลอดภัยขั้นสูง (Secured Mode)</div>
             <h1 class="text-3xl md:text-5xl font-bold text-emerald-400 mb-2">Smart Waste Guardian</h1>
             <h2 class="text-xl md:text-2xl font-semibold mb-3">ผู้พิทักษ์การคัดแยกขยะอัจฉริยะ</h2>
             <p class="text-sm md:text-base text-slate-400 mb-3">จัดทำโดย วิทยาลัยสารพัดช่างบรรหาร-แจ่มใส จังหวัดสุพรรณบุรี</p>
@@ -122,7 +67,7 @@
         </div>
     </div>
 
-    <!-- Modal: Login (พร้อมระบบป้องกันการสุ่มรหัส Brute-Force) -->
+    <!-- Modal: Login -->
     <div id="adminLoginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hide">
         <div class="bg-slate-800 p-6 md:p-8 rounded-2xl w-full max-w-sm border border-slate-700 text-center shadow-2xl">
             <h3 class="text-xl font-bold mb-2">🔒 เข้าสู่ระบบผู้ดูแล</h3>
@@ -146,8 +91,8 @@
         </header>
 
         <main class="flex-1 p-3 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 max-w-7xl mx-auto w-full">
-            <div class="lg:col-span-2 space-y-4">
-                <div class="glass p-3 md:p-4 rounded-2xl border-emerald-500/30 shadow-lg">
+            <div class="lg:col-span-2 flex flex-col gap-3">
+                <div class="glass p-3 md:p-4 rounded-2xl border-emerald-500/30 shadow-lg relative">
                     <div class="flex justify-between items-center mb-3">
                         <h2 class="font-semibold text-base md:text-lg flex items-center gap-2">
                             <span id="aiStatusDot" class="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></span>
@@ -162,14 +107,25 @@
                         <div class="absolute inset-0 border-2 border-dashed border-white/25 m-6 md:m-12 rounded-xl pointer-events-none z-20"></div>
                     </div>
 
-                    <div class="mt-3 md:mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-800/60 p-3 rounded-xl">
+                    <div class="mt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-800/60 p-3 rounded-xl">
                         <div>
                             <p class="text-xs text-slate-400">วัตถุที่ตรวจพบล่าสุด:</p>
                             <p id="detectResult" class="text-base md:text-lg font-bold text-emerald-400">กำลังค้นหาขยะ...</p>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto">
-                            <button onclick="manualTrigger('recycle')" class="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600/20 text-emerald-400 active:bg-emerald-600 active:text-white rounded-xl text-sm font-semibold border border-emerald-500/50 transition">♻️ รีไซเคิล</button>
-                            <button onclick="manualTrigger('general')" class="flex-1 sm:flex-none px-4 py-2.5 bg-amber-600/20 text-amber-400 active:bg-amber-600 active:text-white rounded-xl text-sm font-semibold border border-amber-500/50 transition">🗑️ ขยะทั่วไป</button>
+                            <button onclick="manualTrigger('recycle')" class="flex-1 sm:flex-none px-4 py-2 bg-emerald-600/20 text-emerald-400 active:bg-emerald-600 active:text-white rounded-xl text-sm font-semibold border border-emerald-500/50 transition">♻️ เปิดรีไซเคิล</button>
+                            <button onclick="manualTrigger('general')" class="flex-1 sm:flex-none px-4 py-2 bg-amber-600/20 text-amber-400 active:bg-amber-600 active:text-white rounded-xl text-sm font-semibold border border-amber-500/50 transition">🗑️ เปิดทั่วไป</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 grid grid-cols-2 gap-3 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5"><span class="text-emerald-400">♻️ ปริมาณรีไซเคิล</span><span id="levelRecycleTxt" class="font-bold text-emerald-400">0%</span></div>
+                            <div class="w-full h-2.5 bg-slate-700 rounded-full overflow-hidden"><div id="levelRecycleBar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5"><span class="text-amber-400">🗑️ ปริมาณทั่วไป</span><span id="levelGeneralTxt" class="font-bold text-amber-400">0%</span></div>
+                            <div class="w-full h-2.5 bg-slate-700 rounded-full overflow-hidden"><div id="levelGeneralBar" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%"></div></div>
                         </div>
                     </div>
                 </div>
@@ -193,16 +149,14 @@
     <!-- Modal: รอเชื่อมต่อ ESP32 -->
     <div id="espWaitModal" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-4 hide">
         <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-6"></div>
-        <h2 class="text-2xl md:text-4xl font-bold text-emerald-400 mb-2 text-center">กำลังรอการเชื่อมต่อจากตู้ขยะ (ESP32)...</h2>
+        <h2 class="text-2xl md:text-4xl font-bold text-emerald-400 mb-2 text-center">กำลังรอการเชื่อมต่อจากตู้ขยะ...</h2>
         <p class="text-slate-400 text-sm md:text-base mb-6 text-center">หมายเลข IP เป้าหมาย: <span id="waitEspIp" class="text-emerald-300 font-mono font-bold"></span></p>
         
         <div class="bg-slate-800/90 p-4 md:p-5 rounded-2xl max-w-md text-left border border-slate-700 mb-6 text-xs md:text-sm text-slate-300 space-y-2.5 shadow-xl">
             <p class="text-amber-400 font-semibold text-sm">📌 คำแนะนำหากเชื่อมต่อไม่ได้ (iOS / Android):</p>
             <p>1. <b>ปิดอินเทอร์เน็ตซิม (Cellular / 4G / 5G) ชั่วคราว:</b> เพื่อบังคับให้มือถือส่งข้อมูลผ่านวง WiFi เดียวกับตู้ขยะโดยตรง</p>
             <p>2. <b>สำหรับ iPhone / iPad (iOS):</b> ไปที่แอป <b>การตั้งค่า (Settings) > Safari > ขั้นสูง (Advanced)</b> หรือตรวจสอบว่าอนุญาตให้เข้าถึงเครือข่ายในพื้นที่ (Local Network) แล้ว</p>
-            <p>3. <b>การเปลี่ยน IP:</b> อัปเดตหมายเลข IP ได้เฉพาะผู้ดูแลระบบผ่านหน้าตั้งค่าหลังบ้าน (Admin) เท่านั้น</p>
         </div>
-
         <button onclick="switchView('gateway')" class="px-8 py-3.5 bg-slate-700 active:bg-slate-600 rounded-xl font-semibold transition border border-slate-600">กลับหน้าหลัก</button>
     </div>
 
@@ -259,31 +213,31 @@
                             <option value="all">ทั้งหมด</option><option value="day">วันนี้</option><option value="month">เดือนนี้</option>
                         </select>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="border rounded-xl p-4 flex flex-col items-center bg-gray-50">
-                            <h3 class="font-semibold text-gray-600 mb-2">สัดส่วนประเภทขยะ</h3>
-                            <div class="w-full h-48 relative"><canvas id="statChart"></canvas></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 flex flex-col justify-between">
+                            <div class="flex justify-between items-start">
+                                <div><p class="text-sm text-emerald-600 font-medium">ขยะรีไซเคิลรวม (ชิ้น)</p><p id="statRecycle" class="text-3xl font-bold text-emerald-700 mt-1">0</p></div>
+                                <div class="text-4xl">♻️</div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-emerald-200/60">
+                                <div class="flex justify-between text-xs text-emerald-700 mb-1.5 font-medium"><span>ความจุถังปัจจุบัน</span><span id="adminLevelRecycleTxt">0%</span></div>
+                                <div class="w-full h-2 bg-emerald-200 rounded-full overflow-hidden"><div id="adminLevelRecycleBar" class="h-full bg-emerald-500 transition-all duration-500" style="width:0%"></div></div>
+                            </div>
                         </div>
-                        <div class="border rounded-xl p-4 md:col-span-2 bg-gray-50">
-                            <h3 class="font-semibold text-gray-600 mb-2">แต้มสะสมแยกตามแผนกวิชา</h3>
-                            <div class="w-full h-48 relative"><canvas id="deptChart"></canvas></div>
+                        <div class="bg-amber-50 rounded-xl p-4 border border-amber-100 flex flex-col justify-between">
+                            <div class="flex justify-between items-start">
+                                <div><p class="text-sm text-amber-600 font-medium">ขยะทั่วไปรวม (ชิ้น)</p><p id="statGeneral" class="text-3xl font-bold text-amber-700 mt-1">0</p></div>
+                                <div class="text-4xl">🗑️</div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-amber-200/60">
+                                <div class="flex justify-between text-xs text-amber-700 mb-1.5 font-medium"><span>ความจุถังปัจจุบัน</span><span id="adminLevelGeneralTxt">0%</span></div>
+                                <div class="w-full h-2 bg-amber-200 rounded-full overflow-hidden"><div id="adminLevelGeneralBar" class="h-full bg-amber-500 transition-all duration-500" style="width:0%"></div></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 flex justify-between items-center">
-                            <div>
-                                <p class="text-sm text-emerald-600 font-medium">ขยะรีไซเคิลรวม (ชิ้น)</p>
-                                <p id="statRecycle" class="text-3xl font-bold text-emerald-700 mt-1">0</p>
-                            </div>
-                            <div class="text-4xl">♻️</div>
-                        </div>
-                        <div class="bg-amber-50 rounded-xl p-4 border border-amber-100 flex justify-between items-center">
-                            <div>
-                                <p class="text-sm text-amber-600 font-medium">ขยะทั่วไปรวม (ชิ้น)</p>
-                                <p id="statGeneral" class="text-3xl font-bold text-amber-700 mt-1">0</p>
-                            </div>
-                            <div class="text-4xl">🗑️</div>
-                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="border rounded-xl p-4 flex flex-col items-center bg-gray-50"><h3 class="font-semibold text-gray-600 mb-2">สัดส่วนประเภทขยะ</h3><div class="w-full h-48 relative"><canvas id="statChart"></canvas></div></div>
+                        <div class="border rounded-xl p-4 md:col-span-2 bg-gray-50"><h3 class="font-semibold text-gray-600 mb-2">แต้มสะสมแยกตามแผนกวิชา</h3><div class="w-full h-48 relative"><canvas id="deptChart"></canvas></div></div>
                     </div>
                 </div>
 
@@ -291,13 +245,10 @@
                 <div id="admin-database" class="hide space-y-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <h2 class="text-xl md:text-2xl font-bold">ฐานข้อมูลนักศึกษา</h2>
-                        
                         <div class="flex flex-wrap gap-2 print-hide w-full md:w-auto">
                             <button onclick="downloadTemplate()" class="bg-slate-600 active:bg-slate-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📄 โหลดไฟล์ต้นแบบ</button>
-                            
                             <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" class="hidden" onchange="importExcel(event)">
                             <button onclick="document.getElementById('excelUpload').click()" class="bg-amber-500 active:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📥 นำเข้า Excel</button>
-                            
                             <button onclick="exportExcel()" class="bg-blue-600 active:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">📤 ส่งออก Excel</button>
                             <button onclick="toggleAddStudentForm()" class="bg-emerald-600 active:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm transition font-medium">+ เพิ่มรายบุคคล</button>
                         </div>
@@ -306,7 +257,7 @@
                     <div id="addStudentForm" class="hide bg-gray-50 p-4 rounded-xl border space-y-4 print-hide">
                         <h3 class="font-bold">เพิ่มนักศึกษาใหม่ด้วยตนเอง</h3>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <input type="text" inputmode="numeric" id="newDbId" placeholder="รหัสนักศึกษา (ตัวเลข/อักษร)" class="border rounded-lg px-3 py-2 bg-white focus:border-emerald-500 outline-none">
+                            <input type="text" inputmode="numeric" id="newDbId" placeholder="รหัสนักศึกษา" class="border rounded-lg px-3 py-2 bg-white focus:border-emerald-500 outline-none">
                             <input type="text" id="newDbName" placeholder="ชื่อ-นามสกุล" class="border rounded-lg px-3 py-2 bg-white focus:border-emerald-500 outline-none">
                             <input type="text" id="newDbDept" placeholder="แผนกวิชา" class="border rounded-lg px-3 py-2 bg-white focus:border-emerald-500 outline-none">
                             <button onclick="adminAddStudent()" class="bg-emerald-600 active:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition">บันทึกข้อมูล</button>
@@ -331,28 +282,23 @@
 
                 <!-- Settings Tab -->
                 <div id="admin-settings" class="hide space-y-6">
-                    <h2 class="text-xl md:text-2xl font-bold">ตั้งค่าระบบและความปลอดภัย (Security & Settings)</h2>
+                    <h2 class="text-xl md:text-2xl font-bold">ตั้งค่าระบบและความปลอดภัย</h2>
                     <div class="max-w-xl bg-gray-50 p-5 md:p-6 rounded-xl border">
                         <label class="block text-sm font-semibold mb-1">1. บอร์ด ESP32-S3 (IP Address)</label>
-                        <p class="text-xs text-gray-500 mb-3">ตรวจสอบรูปแบบ IPv4 อัตโนมัติ และซิงค์ไปยังหน้าตู้ทุกเครื่องผ่าน Cloud</p>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input type="text" inputmode="decimal" id="adminEspIp" placeholder="เช่น 192.168.1.100" class="flex-1 border rounded-lg px-4 py-2.5 bg-white font-mono">
                             <button onclick="saveIp()" class="bg-emerald-600 active:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition">บันทึกและซิงค์ IP</button>
                         </div>
                     </div>
-
                     <div class="max-w-xl bg-gray-50 p-5 md:p-6 rounded-xl border">
                         <label class="block text-sm font-semibold mb-1">2. รหัสลับเชื่อมต่อบอร์ด (Hardware API Key)</label>
-                        <p class="text-xs text-gray-500 mb-3">ใช้ยืนยันตัวตนเวลาสั่งเปิดฝาถัง (ต้องตรงกับค่า <code class="bg-gray-200 px-1 rounded">apiKey</code> ในโค้ด Arduino)</p>
                         <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="adminApiKey" placeholder="เช่น SWG_SECRET_2026" class="flex-1 border rounded-lg px-4 py-2.5 bg-white font-mono">
+                            <input type="text" id="adminApiKey" class="flex-1 border rounded-lg px-4 py-2.5 bg-white font-mono">
                             <button onclick="saveApiKey()" class="bg-amber-600 active:bg-amber-700 text-white px-5 py-2.5 rounded-lg font-medium transition">บันทึก API Key</button>
                         </div>
                     </div>
-
                     <div class="max-w-xl bg-gray-50 p-5 md:p-6 rounded-xl border">
-                        <label class="block text-sm font-semibold mb-1">3. เปลี่ยนรหัสแอดมิน (เข้ารหัส SHA-256 อัตโนมัติ)</label>
-                        <p class="text-xs text-gray-500 mb-3">รหัสผ่านจะถูกแปลงเป็นค่า Hash ก่อนบันทึกขึ้น Cloud เพื่อป้องกันการถูกขโมยรหัส</p>
+                        <label class="block text-sm font-semibold mb-1">3. เปลี่ยนรหัสแอดมิน (SHA-256)</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input type="password" id="newAdminPassword" placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)" class="flex-1 border rounded-lg px-4 py-2.5 bg-white">
                             <button onclick="saveAdminPassword()" class="bg-blue-600 active:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition">เปลี่ยนรหัส</button>
@@ -387,31 +333,12 @@
 
     <script>
         /* =========================================================
-           0. ระบบรักษาความปลอดภัย (Security Utilities: XSS, SHA-256, Anti-BruteForce)
+           0. ระบบรักษาความปลอดภัย (Security Utilities)
            ========================================================= */
-        // ฟังก์ชันป้องกันการฝังโค้ดไวรัส (XSS Sanitizer)
-        function sanitizeStr(str) {
-            if (str === null || str === undefined) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;')
-                .trim();
-        }
+        function sanitizeStr(str) { if (str === null || str === undefined) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').trim(); }
+        function isValidStudentId(sid) { return /^[a-zA-Z0-9_-]{1,25}$/.test(sid); }
+        function isValidIPv4(ip) { return /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(ip); }
 
-        // ตรวจสอบความถูกต้องของรหัสนักศึกษา (ห้ามอักขระต้องห้ามของ Firebase)
-        function isValidStudentId(sid) {
-            return /^[a-zA-Z0-9_-]{1,25}$/.test(sid);
-        }
-
-        // ตรวจสอบรูปแบบ IPv4 Address
-        function isValidIPv4(ip) {
-            return /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(ip);
-        }
-
-        // เข้ารหัสรหัสผ่านด้วย SHA-256 (One-Way Hash)
         async function sha256Hash(text) {
             if (window.crypto && window.crypto.subtle) {
                 const msgBuffer = new TextEncoder().encode(text);
@@ -419,30 +346,23 @@
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                 return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             }
-            // Fallback กรณีเปิดบน HTTP ภายใน
             let h1 = 0xdeadbeef ^ text.length, h2 = 0x41c6ce57 ^ text.length;
-            for (let i = 0, ch; i < text.length; i++) {
-                ch = text.charCodeAt(i);
-                h1 = Math.imul(h1 ^ ch, 2654435761);
-                h2 = Math.imul(h2 ^ ch, 1597334677);
-            }
+            for (let i = 0, ch; i < text.length; i++) { ch = text.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
             h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
             h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
             return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
         }
 
-        // ค่า Hash เริ่มต้นของรหัส "admin1234"
         const DEFAULT_ADMIN_HASH = 'c93ccd78b2076528346216b3b2f701e6d281d3fb0030e259c0b207b96b8681f6';
         let isAdminAuthenticated = false;
-        const recentStudentClaims = {}; // ป้องกันการปั๊มแต้มซ้ำรัวๆ
+        const recentStudentClaims = {}; 
+        const BIN_MAX_DEPTH = 35; // ความลึกเมื่อถังว่าง (ซม.)
+        const BIN_FULL_DEPTH = 10; // ความลึกที่ถือว่าถังเต็ม (ซม.)
 
         /* =========================================================
            1. ระบบฐานข้อมูล (Firebase Cloud & LocalStorage)
            ========================================================= */
-        let studentsDB = {
-            "67202040001": { name: "วงศธร", dept: "เทคโนโลยีธุรกิจดิจิทัล", points: 150 },
-            "67202040002": { name: "กนกลักษณ์ สุขประเสริฐ", dept: "เทคโนโลยีธุรกิจดิจิทัล", points: 120 }
-        };
+        let studentsDB = { "67202040001": { name: "วงศธร", dept: "เทคโนโลยีธุรกิจดิจิทัล", points: 150 } };
         let historyDB = [];
         let espIP = localStorage.getItem('swg_esp_ip') || '192.168.1.100';
         let espApiKey = localStorage.getItem('swg_api_key') || 'SWG_SECRET_2026';
@@ -457,30 +377,20 @@
         function fetchWithTimeout(url, options = {}, timeoutMs = 1800) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-            return fetch(url, { ...options, signal: controller.signal })
-                .finally(() => clearTimeout(timeoutId));
+            return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
         }
 
         function updateDbBadge() {
             const badge = document.getElementById('dbStatusBadge');
-            if(firebaseUrl && isCloudMode) {
-                badge.innerText = "สถานะ: เชื่อมต่อ Cloud เข้ารหัสแล้ว (ออนไลน์ 🟢)";
-                badge.className = "inline-block bg-emerald-900/50 text-emerald-400 border border-emerald-500 text-xs px-3 py-1.5 rounded-full mt-2";
-            } else {
-                badge.innerText = "สถานะ: Local Storage (ออฟไลน์ ⚪)";
-                badge.className = "inline-block bg-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full mt-2";
-            }
+            if(firebaseUrl && isCloudMode) { badge.innerText = "สถานะ: เชื่อมต่อ Cloud เข้ารหัสแล้ว (ออนไลน์ 🟢)"; badge.className = "inline-block bg-emerald-900/50 text-emerald-400 border border-emerald-500 text-xs px-3 py-1.5 rounded-full mt-2"; } 
+            else { badge.innerText = "สถานะ: Local Storage (ออฟไลน์ ⚪)"; badge.className = "inline-block bg-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full mt-2"; }
         }
 
         function updateIpDisplay() {
-            const waitIpEl = document.getElementById('waitEspIp');
-            const headerIpEl = document.getElementById('kioskHeaderIp');
-            const adminIpEl = document.getElementById('adminEspIp');
-            const adminKeyEl = document.getElementById('adminApiKey');
-            if(waitIpEl) waitIpEl.innerText = espIP;
-            if(headerIpEl) headerIpEl.innerText = espIP;
-            if(adminIpEl && document.activeElement !== adminIpEl) adminIpEl.value = espIP;
-            if(adminKeyEl && document.activeElement !== adminKeyEl) adminKeyEl.value = espApiKey;
+            if(document.getElementById('waitEspIp')) document.getElementById('waitEspIp').innerText = espIP;
+            if(document.getElementById('kioskHeaderIp')) document.getElementById('kioskHeaderIp').innerText = espIP;
+            if(document.getElementById('adminEspIp') && document.activeElement !== document.getElementById('adminEspIp')) document.getElementById('adminEspIp').value = espIP;
+            if(document.getElementById('adminApiKey') && document.activeElement !== document.getElementById('adminApiKey')) document.getElementById('adminApiKey').value = espApiKey;
         }
 
         if (firebaseUrl) {
@@ -495,71 +405,34 @@
                         if(data.students) studentsDB = data.students;
                         historyDB = data.history || []; 
                         if(data.espIP && isValidIPv4(data.espIP) && data.espIP !== espIP) {
-                            espIP = data.espIP;
-                            localStorage.setItem('swg_esp_ip', espIP);
-                            updateIpDisplay();
+                            espIP = data.espIP; localStorage.setItem('swg_esp_ip', espIP); updateIpDisplay();
                             if(activeView === 'kiosk') checkEspConnection();
                         }
-                        if(data.espApiKey) {
-                            espApiKey = sanitizeStr(data.espApiKey);
-                            localStorage.setItem('swg_api_key', espApiKey);
-                        }
-                        if(data.adminPassHash) {
-                            adminPassHash = data.adminPassHash;
-                            localStorage.setItem('swg_admin_hash', adminPassHash);
-                        } else if(data.adminPass) {
-                            // แปลงรหัสผ่านเก่าที่เป็นข้อความธรรมดาให้เป็น SHA-256 Hash อัตโนมัติ
-                            adminPassHash = await sha256Hash(String(data.adminPass));
-                            localStorage.setItem('swg_admin_hash', adminPassHash);
-                            syncDB();
-                        }
-                    } else {
-                        syncDB();
-                    }
-                    updateIpDisplay();
-                    updateDbBadge();
+                        if(data.espApiKey) { espApiKey = sanitizeStr(data.espApiKey); localStorage.setItem('swg_api_key', espApiKey); }
+                        if(data.adminPassHash) { adminPassHash = data.adminPassHash; localStorage.setItem('swg_admin_hash', adminPassHash); }
+                    } else { syncDB(); }
+                    updateIpDisplay(); updateDbBadge();
                     if(activeView === 'kiosk') renderLeaderboard();
                     if(activeView === 'admin') renderAdmin();
                 });
             } catch (e) { isCloudMode = false; }
-        } else {
-            studentsDB = JSON.parse(localStorage.getItem('swg_students')) || studentsDB;
-            historyDB = JSON.parse(localStorage.getItem('swg_history')) || [];
         }
-        updateDbBadge();
-        updateIpDisplay();
+        updateDbBadge(); updateIpDisplay();
 
         function syncDB() {
-            if (isCloudMode && firebaseDB) {
-                firebaseDB.ref('swg_data').set({ 
-                    students: studentsDB, 
-                    history: historyDB.slice(0, 500), // จำกัดประวัติไม่ให้ฐานข้อมูลล้น
-                    espIP: espIP,
-                    espApiKey: espApiKey,
-                    adminPassHash: adminPassHash
-                });
-            } else {
-                localStorage.setItem('swg_students', JSON.stringify(studentsDB));
-                localStorage.setItem('swg_history', JSON.stringify(historyDB.slice(0, 500)));
-                if(activeView === 'kiosk') renderLeaderboard();
-                if(activeView === 'admin') renderAdmin();
-            }
+            if (isCloudMode && firebaseDB) { firebaseDB.ref('swg_data').set({ students: studentsDB, history: historyDB.slice(0, 500), espIP: espIP, espApiKey: espApiKey, adminPassHash: adminPassHash }); } 
+            else { localStorage.setItem('swg_students', JSON.stringify(studentsDB)); localStorage.setItem('swg_history', JSON.stringify(historyDB.slice(0, 500))); }
         }
 
         /* =========================================================
-           2. ระบบเชื่อมต่อ ESP32 แบบบังคับเชื่อมต่อ (Strict Kiosk)
+           2. ระบบเชื่อมต่อ ESP32 & โชว์เปอร์เซ็นต์ปริมาณขยะ
            ========================================================= */
-        let connectionInterval;
-        let hardwarePollInterval;
-        let isRecycleFull = false;
-        let isGeneralFull = false;
-        let isCheckingEsp = false;
+        let connectionInterval, hardwarePollInterval;
+        let isRecycleFull = false, isGeneralFull = false, isCheckingEsp = false;
         
         function startEspCheck() {
-            document.getElementById('viewKiosk').classList.remove('hide');
-            document.getElementById('espWaitModal').classList.remove('hide');
-            updateIpDisplay();
-            checkEspConnection();
+            document.getElementById('viewKiosk').classList.remove('hide'); document.getElementById('espWaitModal').classList.remove('hide');
+            updateIpDisplay(); checkEspConnection();
             if(connectionInterval) clearInterval(connectionInterval);
             connectionInterval = setInterval(checkEspConnection, 2500);
         }
@@ -569,335 +442,193 @@
             isCheckingEsp = true;
             try {
                 await fetchWithTimeout(`http://${espIP}/`, { mode: 'no-cors', cache: 'no-store' }, 1800);
-                clearInterval(connectionInterval);
-                document.getElementById('espWaitModal').classList.add('hide');
-                startAI(); 
-                startHardwarePolling();
-            } catch (e) {
-            } finally {
-                isCheckingEsp = false;
-            }
+                clearInterval(connectionInterval); document.getElementById('espWaitModal').classList.add('hide');
+                startAI(); startHardwarePolling();
+            } catch (e) {} finally { isCheckingEsp = false; }
+        }
+
+        function calculateTrashPercentage(dist) {
+            if (dist === undefined || dist >= 999) return 0;
+            let pct = ((BIN_MAX_DEPTH - dist) / (BIN_MAX_DEPTH - BIN_FULL_DEPTH)) * 100;
+            return Math.max(0, Math.min(100, Math.round(pct)));
         }
 
         function startHardwarePolling() {
             if(hardwarePollInterval) clearInterval(hardwarePollInterval);
             hardwarePollInterval = setInterval(async () => {
-                if(activeView !== 'kiosk') return;
+                if(activeView !== 'kiosk' && activeView !== 'admin') return;
                 try {
                     const res = await fetchWithTimeout(`http://${espIP}/status`, {}, 1800);
                     const data = await res.json();
                     
-                    isRecycleFull = Boolean(data.recycle_full);
-                    isGeneralFull = Boolean(data.general_full);
+                    isRecycleFull = Boolean(data.recycle_full); isGeneralFull = Boolean(data.general_full);
+                    let rDist = (data.recycle_dist !== undefined && data.recycle_dist !== 999) ? data.recycle_dist : (data.main_dist !== 999 ? data.main_dist : 999);
+                    let gDist = (data.general_dist !== undefined && data.general_dist !== 999) ? data.general_dist : (data.main_dist !== 999 ? data.main_dist : 999);
+                    let rPct = calculateTrashPercentage(rDist), gPct = calculateTrashPercentage(gDist);
 
-                    const fullModal = document.getElementById('binFullModal');
-                    const fullText = document.getElementById('binFullText');
+                    if(document.getElementById('levelRecycleBar')) {
+                        document.getElementById('levelRecycleBar').style.width = rPct + '%'; document.getElementById('levelRecycleTxt').innerText = rPct + '%';
+                        document.getElementById('levelGeneralBar').style.width = gPct + '%'; document.getElementById('levelGeneralTxt').innerText = gPct + '%';
+                    }
+                    if(document.getElementById('adminLevelRecycleBar')) {
+                        document.getElementById('adminLevelRecycleBar').style.width = rPct + '%'; document.getElementById('adminLevelRecycleTxt').innerText = rPct + '%';
+                        document.getElementById('adminLevelGeneralBar').style.width = gPct + '%'; document.getElementById('adminLevelGeneralTxt').innerText = gPct + '%';
+                    }
 
-                    if(isRecycleFull && isGeneralFull) {
-                        fullText.innerText = "ถังขยะทั้ง 2 ฝั่งเต็มแล้ว!";
-                        fullModal.classList.remove('hide');
-                    } else if(isRecycleFull) {
-                        fullText.innerText = "ถังขยะรีไซเคิลเต็มแล้ว!";
-                        fullModal.classList.remove('hide');
-                    } else if(isGeneralFull) {
-                        fullText.innerText = "ถังขยะทั่วไปเต็มแล้ว!";
-                        fullModal.classList.remove('hide');
-                    } else {
-                        fullModal.classList.add('hide');
+                    if(activeView === 'kiosk') {
+                        const fullModal = document.getElementById('binFullModal'), fullText = document.getElementById('binFullText');
+                        if(isRecycleFull && isGeneralFull) { fullText.innerText = "ถังขยะทั้ง 2 ฝั่งเต็มแล้ว!"; fullModal.classList.remove('hide'); } 
+                        else if(isRecycleFull) { fullText.innerText = "ถังขยะรีไซเคิลเต็มแล้ว!"; fullModal.classList.remove('hide'); } 
+                        else if(isGeneralFull) { fullText.innerText = "ถังขยะทั่วไปเต็มแล้ว!"; fullModal.classList.remove('hide'); } 
+                        else { fullModal.classList.add('hide'); }
                     }
                 } catch(e) { }
             }, 3500);
         }
 
-        function stopCameraStream() {
-            if (video && video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-            }
-        }
+        function stopCameraStream() { if (video && video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); video.srcObject = null; } }
 
         function switchView(viewId) {
-            if(viewId === 'admin' && !isAdminAuthenticated) {
-                showAdminLogin();
-                return;
-            }
-            clearInterval(connectionInterval); 
-            clearInterval(hardwarePollInterval);
+            if(viewId === 'admin' && !isAdminAuthenticated) { showAdminLogin(); return; }
+            clearInterval(connectionInterval); clearInterval(hardwarePollInterval);
             if(viewId !== 'kiosk') stopCameraStream();
 
-            document.getElementById('viewGateway').classList.add('hide');
-            document.getElementById('viewKiosk').classList.add('hide');
-            document.getElementById('viewAdmin').classList.add('hide');
-            document.getElementById('espWaitModal').classList.add('hide');
-            document.getElementById('binFullModal').classList.add('hide');
+            ['viewGateway', 'viewKiosk', 'viewAdmin', 'espWaitModal', 'binFullModal'].forEach(id => document.getElementById(id).classList.add('hide'));
             activeView = viewId;
             
-            if(viewId === 'gateway') { 
-                document.getElementById('viewGateway').classList.remove('hide'); 
-                updateDbBadge(); 
-            }
-            else if(viewId === 'kiosk') { 
-                startEspCheck(); 
-                renderLeaderboard(); 
-            }
-            else if(viewId === 'admin') { 
-                document.getElementById('viewAdmin').classList.remove('hide'); 
-                renderAdmin(); 
-            }
+            if(viewId === 'gateway') { document.getElementById('viewGateway').classList.remove('hide'); updateDbBadge(); }
+            else if(viewId === 'kiosk') { startEspCheck(); renderLeaderboard(); }
+            else if(viewId === 'admin') { document.getElementById('viewAdmin').classList.remove('hide'); startHardwarePolling(); renderAdmin(); }
         }
 
-        function logoutAdmin() {
-            isAdminAuthenticated = false;
-            switchView('gateway');
-        }
+        function logoutAdmin() { isAdminAuthenticated = false; switchView('gateway'); }
 
         /* =========================================================
-           3. ระบบกล้อง AI ประสิทธิภาพสูง (iOS Safari Optimized)
+           3. ระบบกล้อง AI (iOS Optimized)
            ========================================================= */
-        let model = null;
-        let isProcessing = false;
-        let isDetectingFrame = false;
-        let currentFacingMode = "environment";
-        const video = document.getElementById('webcam');
-        const canvas = document.getElementById('canvas');
+        let model = null, isProcessing = false, isDetectingFrame = false, currentFacingMode = "environment";
+        const video = document.getElementById('webcam'), canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
         let lastFrameTime = 0;
 
         async function initCameraStream() {
             stopCameraStream();
-            video.setAttribute('autoplay', '');
-            video.setAttribute('muted', '');
-            video.setAttribute('playsinline', '');
-            video.setAttribute('webkit-playsinline', '');
-
-            const constraints = {
-                audio: false,
-                video: { 
-                    facingMode: { ideal: currentFacingMode }, 
-                    width: { ideal: 480 }, 
-                    height: { ideal: 360 },
-                    frameRate: { ideal: 24, max: 30 }
-                }
-            };
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.setAttribute('autoplay', ''); video.setAttribute('muted', ''); video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', '');
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: currentFacingMode }, width: { ideal: 480 }, height: { ideal: 360 }, frameRate: { ideal: 24, max: 30 } } });
             video.srcObject = stream;
-            return new Promise((resolve) => {
-                video.onloadeddata = async () => {
-                    try { await video.play(); } catch(e) {}
-                    canvas.width = video.videoWidth || 480; 
-                    canvas.height = video.videoHeight || 360;
-                    resolve();
-                };
-            });
+            return new Promise((resolve) => { video.onloadeddata = async () => { try { await video.play(); } catch(e) {} canvas.width = video.videoWidth || 480; canvas.height = video.videoHeight || 360; resolve(); }; });
         }
-
-        async function switchCamera() {
-            currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-            try { await initCameraStream(); } catch(e) {}
-        }
+        async function switchCamera() { currentFacingMode = currentFacingMode === "environment" ? "user" : "environment"; try { await initCameraStream(); } catch(e) {} }
 
         async function startAI() {
             try {
-                document.getElementById('aiStatusText').innerText = "กำลังเปิดกล้อง...";
-                await initCameraStream();
-                document.getElementById('btnSwitchCam').classList.remove('hide');
-
+                document.getElementById('aiStatusText').innerText = "กำลังเปิดกล้อง..."; await initCameraStream(); document.getElementById('btnSwitchCam').classList.remove('hide');
                 if(!model) {
                     document.getElementById('aiStatusText').innerText = "กำลังเตรียมสมองกล AI...";
-                    tf.env().set('WEBGL_FORCE_F16_TEXTURES', true);
-                    tf.env().set('WEBGL_PACK', true);
-                    tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0);
-                    await tf.setBackend('webgl');
-                    await tf.ready();
-                    model = await cocoSsd.load({ base: 'lite_mobilenet_v2' }); 
+                    tf.env().set('WEBGL_FORCE_F16_TEXTURES', true); tf.env().set('WEBGL_PACK', true); tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0);
+                    await tf.setBackend('webgl'); await tf.ready(); model = await cocoSsd.load({ base: 'lite_mobilenet_v2' }); 
                 }
-                
-                document.getElementById('aiStatusText').innerText = "กล้องพร้อมสแกนขยะ 100%";
-                document.getElementById('aiStatusDot').classList.replace('bg-yellow-400', 'bg-emerald-400');
+                document.getElementById('aiStatusText').innerText = "กล้องพร้อมสแกนขยะ 100%"; document.getElementById('aiStatusDot').classList.replace('bg-yellow-400', 'bg-emerald-400');
                 requestAnimationFrame(detectLoop);
-            } catch(e) { 
-                document.getElementById('aiStatusText').innerText = "กรุณากดอนุญาตสิทธิ์การใช้กล้องบนเบราว์เซอร์"; 
-            }
+            } catch(e) { document.getElementById('aiStatusText').innerText = "กรุณากดอนุญาตสิทธิ์การใช้กล้องบนเบราว์เซอร์"; }
         }
 
         async function detectLoop(timestamp) {
             if(activeView !== 'kiosk') return;
-            if(document.hidden || !model || video.readyState < 2 || isProcessing || isDetectingFrame) { 
-                requestAnimationFrame(detectLoop); 
-                return; 
-            }
-            if (timestamp - lastFrameTime < 220) { 
-                requestAnimationFrame(detectLoop); 
-                return; 
-            }
-            lastFrameTime = timestamp;
-            isDetectingFrame = true;
+            if(document.hidden || !model || video.readyState < 2 || isProcessing || isDetectingFrame) { requestAnimationFrame(detectLoop); return; }
+            if (timestamp - lastFrameTime < 220) { requestAnimationFrame(detectLoop); return; }
+            lastFrameTime = timestamp; isDetectingFrame = true;
             
             try {
-                const predictions = await model.detect(video, 5, 0.55);
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                let detected = null;
-
+                const predictions = await model.detect(video, 5, 0.55); ctx.clearRect(0, 0, canvas.width, canvas.height); let detected = null;
                 for (let i = 0; i < predictions.length; i++) {
-                    const p = predictions[i];
-                    if(p.class === 'person') continue;
+                    const p = predictions[i]; if(p.class === 'person') continue;
                     if(p.score > 0.60 && !detected) detected = p;
-                    
-                    ctx.strokeStyle = "#10b981"; 
-                    ctx.lineWidth = 3;
-                    ctx.strokeRect(p.bbox[0], p.bbox[1], p.bbox[2], p.bbox[3]);
-                    ctx.fillStyle = "#10b981"; 
-                    ctx.font = "bold 18px Kanit";
-                    ctx.fillText(`${p.class} (${Math.round(p.score*100)}%)`, p.bbox[0], p.bbox[1] > 20 ? p.bbox[1] - 5 : 20);
+                    ctx.strokeStyle = "#10b981"; ctx.lineWidth = 3; ctx.strokeRect(p.bbox[0], p.bbox[1], p.bbox[2], p.bbox[3]);
+                    ctx.fillStyle = "#10b981"; ctx.font = "bold 18px Kanit"; ctx.fillText(`${p.class} (${Math.round(p.score*100)}%)`, p.bbox[0], p.bbox[1] > 20 ? p.bbox[1] - 5 : 20);
                 }
-
                 if(detected) {
                     document.getElementById('detectResult').innerText = detected.class;
                     const recycleClasses = ['bottle', 'cup', 'wine glass', 'book', 'paper', 'vase'];
                     triggerBin(recycleClasses.includes(detected.class) ? 'recycle' : 'general');
                 }
-            } catch(e) {
-            } finally {
-                isDetectingFrame = false;
-            }
+            } catch(e) {} finally { isDetectingFrame = false; }
             requestAnimationFrame(detectLoop);
         }
 
         function manualTrigger(type) { triggerBin(type); }
-        
         function showTempError(msg) {
             const statusText = document.getElementById('aiStatusText');
-            statusText.innerText = msg; 
-            statusText.classList.add('text-red-400');
-            setTimeout(() => {
-                statusText.innerText = "กล้องพร้อมสแกนขยะ 100%";
-                statusText.classList.remove('text-red-400');
-                isProcessing = false;
-            }, 3000);
+            statusText.innerText = msg; statusText.classList.add('text-red-400');
+            setTimeout(() => { statusText.innerText = "กล้องพร้อมสแกนขยะ 100%"; statusText.classList.remove('text-red-400'); isProcessing = false; }, 3000);
         }
 
         let currentTrashType = "";
         async function triggerBin(type) {
             if(isProcessing) return;
             isProcessing = true; 
-
             if(type === 'recycle' && isRecycleFull) return showTempError("❌ ถังขยะรีไซเคิลเต็มแล้ว!");
             if(type === 'general' && isGeneralFull) return showTempError("❌ ถังขยะทั่วไปเต็มแล้ว!");
 
             currentTrashType = type;
-            // ส่ง API Key แนบไปกับคำสั่งเปิดฝาถังเพื่อป้องกันการยิงคำสั่งปลอมจากภายนอก
-            try { 
-                fetchWithTimeout(`http://${espIP}/open?type=${encodeURIComponent(type)}&key=${encodeURIComponent(espApiKey)}`, { mode: 'no-cors' }, 2000); 
-            } catch(e){}
+            try { fetchWithTimeout(`http://${espIP}/open?type=${encodeURIComponent(type)}&key=${encodeURIComponent(espApiKey)}`, { mode: 'no-cors' }, 2000); } catch(e){}
             
             document.getElementById('binTitle').innerText = type === 'recycle' ? "♻️ เปิดถังรีไซเคิล" : "🗑️ เปิดถังขยะทั่วไป";
-            document.getElementById('openingModal').classList.remove('hide');
-            ctx.clearRect(0, 0, canvas.width, canvas.height); 
-            setTimeout(() => { 
-                document.getElementById('openingModal').classList.add('hide'); 
-                showClaimModal(); 
-            }, 4000);
+            document.getElementById('openingModal').classList.remove('hide'); ctx.clearRect(0, 0, canvas.width, canvas.height); 
+            setTimeout(() => { document.getElementById('openingModal').classList.add('hide'); showClaimModal(); }, 4000);
         }
 
         /* =========================================================
-           4. ระบบรับแต้ม (พร้อมระบบ Anti-Spam ป้องกันปั๊มแต้ม)
+           4. ระบบรับแต้ม (Anti-Spam)
            ========================================================= */
         let claimTimer;
         function showClaimModal() {
             document.getElementById('claimModal').classList.remove('hide'); 
-            const inputEl = document.getElementById('claimStudentId');
-            inputEl.value = '';
-            document.getElementById('studentFoundBadge').classList.add('hide'); 
-            document.getElementById('studentNotFoundBadge').classList.add('hide');
-            document.getElementById('btnSubmitClaim').disabled = true; 
-            document.getElementById('btnSubmitClaim').className = "flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
+            const inputEl = document.getElementById('claimStudentId'); inputEl.value = '';
+            document.getElementById('studentFoundBadge').classList.add('hide'); document.getElementById('studentNotFoundBadge').classList.add('hide');
+            document.getElementById('btnSubmitClaim').disabled = true; document.getElementById('btnSubmitClaim').className = "flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
             setTimeout(() => inputEl.focus(), 150);
             
-            let time = 15; 
-            document.getElementById('claimCountdown').innerText = time;
-            clearInterval(claimTimer);
-            claimTimer = setInterval(() => { 
-                time--; 
-                document.getElementById('claimCountdown').innerText = time; 
-                if(time <= 0) skipClaim(); 
-            }, 1000);
+            let time = 15; document.getElementById('claimCountdown').innerText = time; clearInterval(claimTimer);
+            claimTimer = setInterval(() => { time--; document.getElementById('claimCountdown').innerText = time; if(time <= 0) skipClaim(); }, 1000);
         }
-
-        function skipClaim() { 
-            clearInterval(claimTimer); 
-            document.getElementById('claimStudentId').blur();
-            document.getElementById('claimModal').classList.add('hide'); 
-            setTimeout(() => isProcessing = false, 1200); 
-        }
-
+        function skipClaim() { clearInterval(claimTimer); document.getElementById('claimStudentId').blur(); document.getElementById('claimModal').classList.add('hide'); setTimeout(() => isProcessing = false, 1200); }
         function checkStudentId() {
-            const sid = document.getElementById('claimStudentId').value.trim(); 
-            const btn = document.getElementById('btnSubmitClaim');
+            const sid = document.getElementById('claimStudentId').value.trim(); const btn = document.getElementById('btnSubmitClaim');
             if(sid.length > 0) {
                 if(studentsDB[sid]) {
-                    document.getElementById('studentFoundBadge').classList.remove('hide'); 
-                    document.getElementById('studentNotFoundBadge').classList.add('hide');
+                    document.getElementById('studentFoundBadge').classList.remove('hide'); document.getElementById('studentNotFoundBadge').classList.add('hide');
                     document.getElementById('claimStudentNameDisplay').textContent = studentsDB[sid].name;
-                    btn.disabled = false; 
-                    btn.className = "flex-1 py-3.5 rounded-xl bg-emerald-600 active:bg-emerald-500 font-semibold text-white transition";
+                    btn.disabled = false; btn.className = "flex-1 py-3.5 rounded-xl bg-emerald-600 active:bg-emerald-500 font-semibold text-white transition";
                 } else {
-                    document.getElementById('studentFoundBadge').classList.add('hide'); 
-                    document.getElementById('studentNotFoundBadge').classList.remove('hide');
-                    btn.disabled = true; 
-                    btn.className = "flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
+                    document.getElementById('studentFoundBadge').classList.add('hide'); document.getElementById('studentNotFoundBadge').classList.remove('hide');
+                    btn.disabled = true; btn.className = "flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
                 }
             } else {
-                document.getElementById('studentFoundBadge').classList.add('hide'); 
-                document.getElementById('studentNotFoundBadge').classList.add('hide');
-                btn.disabled = true; 
-                btn.className = "flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
+                document.getElementById('studentFoundBadge').classList.add('hide'); document.getElementById('studentNotFoundBadge').classList.add('hide');
+                btn.disabled = true; btn.className = "flex-1 py-3.5 rounded-xl bg-slate-600 text-slate-300 font-semibold opacity-50 cursor-not-allowed";
             }
         }
-
         function submitClaim() {
             const sid = document.getElementById('claimStudentId').value.trim();
             if(!sid || !studentsDB[sid]) return skipClaim(); 
-
-            // ป้องกันการปั๊มแต้มซ้ำภายใน 10 วินาที
             const now = Date.now();
-            if (recentStudentClaims[sid] && (now - recentStudentClaims[sid] < 10000)) {
-                alert("กรุณารอสักครู่ก่อนสะสมแต้มอีกครั้ง (ป้องกันการกดซ้ำ)");
-                return skipClaim();
-            }
+            if (recentStudentClaims[sid] && (now - recentStudentClaims[sid] < 10000)) { alert("กรุณารอสักครู่ก่อนสะสมแต้มอีกครั้ง (ป้องกันการกดซ้ำ)"); return skipClaim(); }
             recentStudentClaims[sid] = now;
-            
-            const currentPts = Math.max(0, Math.min(999999, parseInt(studentsDB[sid].points) || 0));
-            studentsDB[sid].points = currentPts + 10;
-            
-            historyDB.unshift({ 
-                timestamp: now, 
-                time: new Date().toLocaleString('th-TH'), 
-                sid: sanitizeStr(sid), 
-                name: sanitizeStr(studentsDB[sid].name), 
-                type: currentTrashType === 'recycle' ? 'รีไซเคิล' : 'ทั่วไป', 
-                points: 10 
-            });
-            
+            const currentPts = Math.max(0, Math.min(999999, parseInt(studentsDB[sid].points) || 0)); studentsDB[sid].points = currentPts + 10;
+            historyDB.unshift({ timestamp: now, time: new Date().toLocaleString('th-TH'), sid: sanitizeStr(sid), name: sanitizeStr(studentsDB[sid].name), type: currentTrashType === 'recycle' ? 'รีไซเคิล' : 'ทั่วไป', points: 10 });
             syncDB(); 
-            try { 
-                fetchWithTimeout(`http://${espIP}/open?type=${encodeURIComponent(currentTrashType)}&sid=${encodeURIComponent(sid)}&key=${encodeURIComponent(espApiKey)}`, { mode: 'no-cors' }, 2000); 
-            } catch(e){}
-            renderLeaderboard();
-            skipClaim();
+            try { fetchWithTimeout(`http://${espIP}/open?type=${encodeURIComponent(currentTrashType)}&sid=${encodeURIComponent(sid)}&key=${encodeURIComponent(espApiKey)}`, { mode: 'no-cors' }, 2000); } catch(e){}
+            renderLeaderboard(); skipClaim();
         }
-
         function renderLeaderboard() {
-            const list = document.getElementById('leaderboardList');
-            if(!list) return;
+            const list = document.getElementById('leaderboardList'); if(!list) return;
             const sorted = Object.entries(studentsDB).sort((a,b) => (b[1].points || 0) - (a[1].points || 0)).slice(0, 10);
             list.innerHTML = sorted.map((s, i) => `
                 <div class="flex justify-between items-center p-3 bg-slate-800/60 rounded-xl border border-slate-700">
                     <div class="flex items-center gap-3">
                         <div class="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center font-bold text-xs text-emerald-400">${i+1}</div>
-                        <div>
-                            <p class="font-semibold text-sm text-white">${sanitizeStr(s[1].name)}</p>
-                            <p class="text-xs text-slate-400 font-mono">${sanitizeStr(s[0])} • ${sanitizeStr(s[1].dept || 'ไม่ระบุ')}</p>
-                        </div>
+                        <div><p class="font-semibold text-sm text-white">${sanitizeStr(s[1].name)}</p><p class="text-xs text-slate-400 font-mono">${sanitizeStr(s[0])} • ${sanitizeStr(s[1].dept || 'ไม่ระบุ')}</p></div>
                     </div>
                     <div class="font-bold text-sm text-emerald-400">${parseInt(s[1].points) || 0} Pts</div>
                 </div>
@@ -905,320 +636,141 @@
         }
 
         /* =========================================================
-           5. โหมด Admin (ป้องกัน Brute-Force + เข้ารหัส SHA-256)
+           5. โหมด Admin (Dashboard, Database, Settings)
            ========================================================= */
         let chartInst1 = null, chartInst2 = null;
-
         function checkLoginLockout() {
-            const lockUntil = parseInt(localStorage.getItem('swg_lock_until') || '0');
-            const now = Date.now();
-            const lockMsg = document.getElementById('loginLockMsg');
-            const btnLogin = document.getElementById('btnAdminLogin');
+            const lockUntil = parseInt(localStorage.getItem('swg_lock_until') || '0'), now = Date.now();
+            const lockMsg = document.getElementById('loginLockMsg'), btnLogin = document.getElementById('btnAdminLogin');
             if (now < lockUntil) {
                 const remainSec = Math.ceil((lockUntil - now) / 1000);
-                lockMsg.innerText = `⛔ คุณใส่รหัสผิดเกินกำหนด ระบบล็อกชั่วคราว (${remainSec} วินาที)`;
-                lockMsg.classList.remove('hide');
-                btnLogin.disabled = true;
-                btnLogin.classList.add('opacity-50', 'cursor-not-allowed');
-                return true;
-            } else {
-                lockMsg.classList.add('hide');
-                btnLogin.disabled = false;
-                btnLogin.classList.remove('opacity-50', 'cursor-not-allowed');
-                return false;
-            }
+                lockMsg.innerText = `⛔ คุณใส่รหัสผิดเกินกำหนด ระบบล็อกชั่วคราว (${remainSec} วินาที)`; lockMsg.classList.remove('hide');
+                btnLogin.disabled = true; btnLogin.classList.add('opacity-50', 'cursor-not-allowed'); return true;
+            } else { lockMsg.classList.add('hide'); btnLogin.disabled = false; btnLogin.classList.remove('opacity-50', 'cursor-not-allowed'); return false; }
         }
-
-        function showAdminLogin() { 
-            document.getElementById('adminLoginModal').classList.remove('hide'); 
-            const passEl = document.getElementById('adminPassword');
-            passEl.value = ''; 
-            checkLoginLockout();
-            setTimeout(() => passEl.focus(), 150);
-        }
-
+        function showAdminLogin() { document.getElementById('adminLoginModal').classList.remove('hide'); const passEl = document.getElementById('adminPassword'); passEl.value = ''; checkLoginLockout(); setTimeout(() => passEl.focus(), 150); }
         async function verifyAdmin() { 
             if (checkLoginLockout()) return;
-
-            const inputPass = document.getElementById('adminPassword').value;
-            const inputHash = await sha256Hash(inputPass);
-
-            // รองรับทั้งค่า Hash ที่ตั้งใหม่ และรหัสเริ่มต้น admin1234
-            const defaultCheckHash = await sha256Hash('admin1234');
+            const inputPass = document.getElementById('adminPassword').value, inputHash = await sha256Hash(inputPass), defaultCheckHash = await sha256Hash('admin1234');
             const isMatch = (inputHash === adminPassHash) || (adminPassHash === DEFAULT_ADMIN_HASH && inputHash === defaultCheckHash);
-
             if(isMatch) { 
-                localStorage.setItem('swg_login_fails', '0');
-                isAdminAuthenticated = true;
-                document.getElementById('adminPassword').blur();
-                document.getElementById('adminLoginModal').classList.add('hide'); 
-                switchView('admin'); 
+                localStorage.setItem('swg_login_fails', '0'); isAdminAuthenticated = true; document.getElementById('adminPassword').blur();
+                document.getElementById('adminLoginModal').classList.add('hide'); switchView('admin'); 
             } else { 
-                let fails = parseInt(localStorage.getItem('swg_login_fails') || '0') + 1;
-                localStorage.setItem('swg_login_fails', String(fails));
-                if (fails >= 5) {
-                    // ล็อก 60 วินาทีเมื่อเดารหัสผิดครบ 5 ครั้ง
-                    localStorage.setItem('swg_lock_until', String(Date.now() + 60000));
-                    localStorage.setItem('swg_login_fails', '0');
-                    checkLoginLockout();
-                } else {
-                    alert(`รหัสผ่านไม่ถูกต้อง! (เหลือโอกาสอีก ${5 - fails} ครั้งก่อนระบบล็อกชั่วคราว)`);
-                }
+                let fails = parseInt(localStorage.getItem('swg_login_fails') || '0') + 1; localStorage.setItem('swg_login_fails', String(fails));
+                if (fails >= 5) { localStorage.setItem('swg_lock_until', String(Date.now() + 60000)); localStorage.setItem('swg_login_fails', '0'); checkLoginLockout(); } 
+                else { alert(`รหัสผ่านไม่ถูกต้อง! (เหลือโอกาสอีก ${5 - fails} ครั้งก่อนระบบล็อกชั่วคราว)`); }
             } 
         }
-
         function switchAdminTab(tabName) {
             if(!isAdminAuthenticated) return;
-            ['dashboard', 'database', 'settings'].forEach(t => { 
-                document.getElementById('admin-'+t).classList.add('hide'); 
-                document.getElementById('tab-'+t).className = "whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100 transition"; 
-            });
-            document.getElementById('admin-'+tabName).classList.remove('hide'); 
-            document.getElementById('tab-'+tabName).className = "whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700 transition";
+            ['dashboard', 'database', 'settings'].forEach(t => { document.getElementById('admin-'+t).classList.add('hide'); document.getElementById('tab-'+t).className = "whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold hover:bg-gray-100 transition"; });
+            document.getElementById('admin-'+tabName).classList.remove('hide'); document.getElementById('tab-'+tabName).className = "whitespace-nowrap flex-1 lg:flex-none text-left px-4 py-3 rounded-xl font-semibold bg-emerald-100 text-emerald-700 transition";
             renderAdmin();
         }
-
         function renderAdmin() {
             if(!isAdminAuthenticated) return;
-            const filter = document.getElementById('timeFilter').value; 
-            const now = new Date();
+            const filter = document.getElementById('timeFilter').value, now = new Date();
             const filteredHist = (historyDB || []).filter(h => {
-                if(!h || !h.timestamp) return true; 
-                const d = new Date(h.timestamp);
+                if(!h || !h.timestamp) return true; const d = new Date(h.timestamp);
                 if(filter === 'day') return d.toDateString() === now.toDateString();
                 if(filter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); 
                 return true; 
             });
             
-            let rec = 0, gen = 0; 
-            filteredHist.forEach(h => { 
-                if(h.type === 'รีไซเคิล' || h.type === 'recycle') rec++; 
-                else gen++; 
-            });
-            
-            const recEl = document.getElementById('statRecycle');
-            const genEl = document.getElementById('statGeneral');
-            if(recEl) recEl.innerText = rec; 
-            if(genEl) genEl.innerText = gen;
+            let rec = 0, gen = 0; filteredHist.forEach(h => { if(h.type === 'รีไซเคิล' || h.type === 'recycle') rec++; else gen++; });
+            const recEl = document.getElementById('statRecycle'), genEl = document.getElementById('statGeneral');
+            if(recEl) recEl.innerText = rec; if(genEl) genEl.innerText = gen;
 
-            if(chartInst1) {
-                chartInst1.data.datasets[0].data = [rec, gen];
-                chartInst1.update('none');
-            } else {
-                chartInst1 = new Chart(document.getElementById('statChart').getContext('2d'), { 
-                    type: 'doughnut', 
-                    data: { labels: ['รีไซเคิล', 'ทั่วไป'], datasets: [{ data: [rec, gen], backgroundColor: ['#10b981', '#f59e0b'] }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, animation: false } 
-                });
-            }
+            if(chartInst1) { chartInst1.data.datasets[0].data = [rec, gen]; chartInst1.update('none'); } 
+            else { chartInst1 = new Chart(document.getElementById('statChart').getContext('2d'), { type: 'doughnut', data: { labels: ['รีไซเคิล', 'ทั่วไป'], datasets: [{ data: [rec, gen], backgroundColor: ['#10b981', '#f59e0b'] }] }, options: { responsive: true, maintainAspectRatio: false, animation: false } }); }
             
-            const deptStats = {}; 
-            Object.values(studentsDB).forEach(s => { 
-                const d = sanitizeStr(s.dept || 'ไม่ระบุ');
-                deptStats[d] = (deptStats[d] || 0) + (parseInt(s.points) || 0); 
-            });
-            
-            if(chartInst2) {
-                chartInst2.data.labels = Object.keys(deptStats);
-                chartInst2.data.datasets[0].data = Object.values(deptStats);
-                chartInst2.update('none');
-            } else {
-                chartInst2 = new Chart(document.getElementById('deptChart').getContext('2d'), { 
-                    type: 'bar', 
-                    data: { labels: Object.keys(deptStats), datasets: [{ label: 'แต้มสะสมรวม', data: Object.values(deptStats), backgroundColor: '#3b82f6', borderRadius: 4 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, animation: false } 
-                });
-            }
+            const deptStats = {}; Object.values(studentsDB).forEach(s => { const d = sanitizeStr(s.dept || 'ไม่ระบุ'); deptStats[d] = (deptStats[d] || 0) + (parseInt(s.points) || 0); });
+            if(chartInst2) { chartInst2.data.labels = Object.keys(deptStats); chartInst2.data.datasets[0].data = Object.values(deptStats); chartInst2.update('none'); } 
+            else { chartInst2 = new Chart(document.getElementById('deptChart').getContext('2d'), { type: 'bar', data: { labels: Object.keys(deptStats), datasets: [{ label: 'แต้มสะสมรวม', data: Object.values(deptStats), backgroundColor: '#3b82f6', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, animation: false } }); }
 
             document.getElementById('studentTableBody').innerHTML = Object.entries(studentsDB).map(([id, data]) => {
-                const safeId = sanitizeStr(id);
-                const safeName = sanitizeStr(data.name);
-                const safeDept = sanitizeStr(data.dept || 'ไม่ระบุ');
-                const safePts = parseInt(data.points) || 0;
-                return `
-                <tr class="hover:bg-gray-50 border-b">
-                    <td class="px-3 md:px-4 py-2.5 font-mono text-xs md:text-sm">${safeId}</td>
-                    <td class="px-3 md:px-4 py-2.5 font-semibold text-xs md:text-sm">${safeName}</td>
-                    <td class="px-3 md:px-4 py-2.5 text-gray-600 text-xs md:text-sm">${safeDept}</td>
-                    <td class="px-3 md:px-4 py-2.5 text-center font-bold text-emerald-600">${safePts}</td>
-                    <td class="px-3 md:px-4 py-2.5 text-center print-hide whitespace-nowrap">
-                        <button onclick="openEditModal('${safeId}')" class="text-blue-600 border border-blue-200 px-2.5 py-1 rounded bg-blue-50 mr-1 active:bg-blue-100 transition text-xs font-semibold">แก้ไข</button>
-                        <button onclick="deleteStudent('${safeId}')" class="text-red-600 border border-red-200 px-2.5 py-1 rounded bg-red-50 active:bg-red-100 transition text-xs font-semibold">ลบ</button>
-                    </td>
-                </tr>`;
+                const safeId = sanitizeStr(id), safeName = sanitizeStr(data.name), safeDept = sanitizeStr(data.dept || 'ไม่ระบุ'), safePts = parseInt(data.points) || 0;
+                return `<tr class="hover:bg-gray-50 border-b"><td class="px-3 md:px-4 py-2.5 font-mono text-xs md:text-sm">${safeId}</td><td class="px-3 md:px-4 py-2.5 font-semibold text-xs md:text-sm">${safeName}</td><td class="px-3 md:px-4 py-2.5 text-gray-600 text-xs md:text-sm">${safeDept}</td><td class="px-3 md:px-4 py-2.5 text-center font-bold text-emerald-600">${safePts}</td><td class="px-3 md:px-4 py-2.5 text-center print-hide whitespace-nowrap"><button onclick="openEditModal('${safeId}')" class="text-blue-600 border border-blue-200 px-2.5 py-1 rounded bg-blue-50 mr-1 active:bg-blue-100 transition text-xs font-semibold">แก้ไข</button><button onclick="deleteStudent('${safeId}')" class="text-red-600 border border-red-200 px-2.5 py-1 rounded bg-red-50 active:bg-red-100 transition text-xs font-semibold">ลบ</button></td></tr>`;
             }).join('');
-            
             updateIpDisplay();
         }
 
         function toggleAddStudentForm() { document.getElementById('addStudentForm').classList.toggle('hide'); }
-        
         function adminAddStudent() {
             if(!isAdminAuthenticated) return;
-            const sid = sanitizeStr(document.getElementById('newDbId').value);
-            const name = sanitizeStr(document.getElementById('newDbName').value);
-            const dept = sanitizeStr(document.getElementById('newDbDept').value) || 'เทคโนโลยีธุรกิจดิจิทัล';
-            
+            const sid = sanitizeStr(document.getElementById('newDbId').value), name = sanitizeStr(document.getElementById('newDbName').value), dept = sanitizeStr(document.getElementById('newDbDept').value) || 'เทคโนโลยีธุรกิจดิจิทัล';
             if(!sid || !name) return alert("กรุณากรอกรหัสนักศึกษาและชื่อ-นามสกุลให้ครบถ้วน");
-            if(!isValidStudentId(sid)) return alert("รหัสนักศึกษาต้องเป็นตัวเลขหรือตัวอักษรภาษาอังกฤษเท่านั้น (ห้ามเว้นวรรคหรือใช้อักขระพิเศษ)");
-            
-            studentsDB[sid] = { name: name, dept: dept, points: 0 };
-            syncDB(); 
-            renderAdmin();
-            toggleAddStudentForm(); 
-            document.getElementById('newDbId').value = ''; 
-            document.getElementById('newDbName').value = ''; 
-            alert('เพิ่มรายชื่อนักศึกษาสำเร็จ!');
+            if(!isValidStudentId(sid)) return alert("รหัสนักศึกษาต้องเป็นตัวเลขหรือตัวอักษรภาษาอังกฤษเท่านั้น");
+            studentsDB[sid] = { name: name, dept: dept, points: 0 }; syncDB(); renderAdmin(); toggleAddStudentForm(); 
+            document.getElementById('newDbId').value = ''; document.getElementById('newDbName').value = ''; alert('เพิ่มรายชื่อนักศึกษาสำเร็จ!');
         }
-
         function openEditModal(sid) {
             if(!isAdminAuthenticated) return;
-            const s = studentsDB[sid]; 
-            if(!s) return;
-            document.getElementById('editOriginalSid').value = sid; 
-            document.getElementById('editSid').value = sid; 
-            document.getElementById('editName').value = s.name || '';
-            document.getElementById('editDept').value = s.dept || ''; 
-            document.getElementById('editPoints').value = parseInt(s.points) || 0; 
-            document.getElementById('editModal').classList.remove('hide');
+            const s = studentsDB[sid]; if(!s) return;
+            document.getElementById('editOriginalSid').value = sid; document.getElementById('editSid').value = sid; 
+            document.getElementById('editName').value = s.name || ''; document.getElementById('editDept').value = s.dept || ''; 
+            document.getElementById('editPoints').value = parseInt(s.points) || 0; document.getElementById('editModal').classList.remove('hide');
         }
-
         function saveEditStudent() {
             if(!isAdminAuthenticated) return;
-            const originalSid = document.getElementById('editOriginalSid').value.trim();
-            const newSid = sanitizeStr(document.getElementById('editSid').value);
-            const name = sanitizeStr(document.getElementById('editName').value);
-            const dept = sanitizeStr(document.getElementById('editDept').value) || 'ไม่ระบุ';
-            const pts = Math.max(0, Math.min(999999, parseInt(document.getElementById('editPoints').value) || 0));
-            
+            const originalSid = document.getElementById('editOriginalSid').value.trim(), newSid = sanitizeStr(document.getElementById('editSid').value), name = sanitizeStr(document.getElementById('editName').value), dept = sanitizeStr(document.getElementById('editDept').value) || 'ไม่ระบุ', pts = Math.max(0, Math.min(999999, parseInt(document.getElementById('editPoints').value) || 0));
             if(!newSid || !name) return alert("กรุณากรอกรหัสนักศึกษาและชื่อ-นามสกุล");
             if(!isValidStudentId(newSid)) return alert("รูปแบบรหัสนักศึกษาไม่ถูกต้อง");
-            
-            if(newSid !== originalSid && studentsDB[newSid]) {
-                return alert("รหัสนักศึกษาใหม่นี้มีอยู่ในระบบแล้ว!");
-            }
-            
-            if(newSid !== originalSid) {
-                delete studentsDB[originalSid];
-            }
-            
-            studentsDB[newSid] = { name: name, dept: dept, points: pts };
-            syncDB(); 
-            renderAdmin();
-            document.getElementById('editModal').classList.add('hide');
+            if(newSid !== originalSid && studentsDB[newSid]) return alert("รหัสนักศึกษาใหม่นี้มีอยู่ในระบบแล้ว!");
+            if(newSid !== originalSid) delete studentsDB[originalSid];
+            studentsDB[newSid] = { name: name, dept: dept, points: pts }; syncDB(); renderAdmin(); document.getElementById('editModal').classList.add('hide');
         }
-
-        function deleteStudent(sid) { 
-            if(!isAdminAuthenticated) return;
-            if(confirm(`ยืนยันการลบข้อมูลของ ${studentsDB[sid].name} (${sid}) หรือไม่?`)) { 
-                delete studentsDB[sid]; 
-                syncDB(); 
-                renderAdmin();
-            } 
-        }
-
+        function deleteStudent(sid) { if(!isAdminAuthenticated) return; if(confirm(`ยืนยันการลบข้อมูลของ ${studentsDB[sid].name} (${sid}) หรือไม่?`)) { delete studentsDB[sid]; syncDB(); renderAdmin(); } }
         function downloadTemplate() {
-            const ws = XLSX.utils.json_to_sheet([
-                { "รหัสนักศึกษา": "67202040001", "ชื่อ-นามสกุล": "นายสมชาย ใจดี", "แผนกวิชา": "เทคโนโลยีธุรกิจดิจิทัล", "แต้มสะสม": 0 }
-            ]);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Template");
-            XLSX.writeFile(wb, "Student_Template.xlsx");
+            const ws = XLSX.utils.json_to_sheet([{ "รหัสนักศึกษา": "67202040001", "ชื่อ-นามสกุล": "นายสมชาย ใจดี", "แผนกวิชา": "เทคโนโลยีธุรกิจดิจิทัล", "แต้มสะสม": 0 }]);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Template"); XLSX.writeFile(wb, "Student_Template.xlsx");
         }
-
         function importExcel(e) {
             if(!isAdminAuthenticated) return;
-            const file = e.target.files[0];
-            if(!file) return;
+            const file = e.target.files[0]; if(!file) return;
             const reader = new FileReader();
             reader.onload = function(event) {
                 try {
-                    const data = new Uint8Array(event.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const rows = XLSX.utils.sheet_to_json(firstSheet);
-                    
+                    const data = new Uint8Array(event.target.result), workbook = XLSX.read(data, {type: 'array'}), firstSheet = workbook.Sheets[workbook.SheetNames[0]], rows = XLSX.utils.sheet_to_json(firstSheet);
                     let importedCount = 0;
                     rows.forEach(row => {
-                        const sidRaw = row['รหัสนักศึกษา'] || row['รหัสประจำตัว'] || row['รหัส'] || row['ID'] || row['id'];
-                        const nameRaw = row['ชื่อ-นามสกุล'] || row['ชื่อ-สกุล'] || row['ชื่อ'] || row['Name'] || row['name'];
+                        const sidRaw = row['รหัสนักศึกษา'] || row['รหัสประจำตัว'] || row['รหัส'] || row['ID'] || row['id'], nameRaw = row['ชื่อ-นามสกุล'] || row['ชื่อ-สกุล'] || row['ชื่อ'] || row['Name'] || row['name'];
                         if(sidRaw !== undefined && nameRaw !== undefined) {
-                            const sid = sanitizeStr(sidRaw);
-                            const name = sanitizeStr(nameRaw);
+                            const sid = sanitizeStr(sidRaw), name = sanitizeStr(nameRaw);
                             if(sid && name && isValidStudentId(sid)) {
-                                const existingPoints = studentsDB[sid] ? (parseInt(studentsDB[sid].points) || 0) : 0;
-                                const rowPts = row['แต้มสะสม'] !== undefined ? parseInt(row['แต้มสะสม']) : existingPoints;
-                                const deptRaw = row['แผนกวิชา'] || row['แผนก'] || (studentsDB[sid] ? studentsDB[sid].dept : 'เทคโนโลยีธุรกิจดิจิทัล');
-                                
-                                studentsDB[sid] = { 
-                                    name: name, 
-                                    dept: sanitizeStr(deptRaw), 
-                                    points: isNaN(rowPts) ? 0 : Math.max(0, Math.min(999999, rowPts))
-                                };
-                                importedCount++;
+                                const existingPoints = studentsDB[sid] ? (parseInt(studentsDB[sid].points) || 0) : 0, rowPts = row['แต้มสะสม'] !== undefined ? parseInt(row['แต้มสะสม']) : existingPoints, deptRaw = row['แผนกวิชา'] || row['แผนก'] || (studentsDB[sid] ? studentsDB[sid].dept : 'เทคโนโลยีธุรกิจดิจิทัล');
+                                studentsDB[sid] = { name: name, dept: sanitizeStr(deptRaw), points: isNaN(rowPts) ? 0 : Math.max(0, Math.min(999999, rowPts)) }; importedCount++;
                             }
                         }
                     });
-                    
-                    if(importedCount > 0) {
-                        syncDB();
-                        renderAdmin();
-                        alert(`นำเข้าและกรองความปลอดภัยข้อมูลสำเร็จ ${importedCount} รายชื่อ!`);
-                    } else {
-                        alert("ไม่พบข้อมูลที่ตรงรูปแบบ กรุณาใช้คอลัมน์ 'รหัสนักศึกษา' และ 'ชื่อ-นามสกุล'");
-                    }
-                } catch(err) {
-                    alert("เกิดข้อผิดพลาดในการอ่านไฟล์ Excel");
-                }
-                document.getElementById('excelUpload').value = ''; 
-            };
-            reader.readAsArrayBuffer(file);
+                    if(importedCount > 0) { syncDB(); renderAdmin(); alert(`นำเข้าและกรองความปลอดภัยข้อมูลสำเร็จ ${importedCount} รายชื่อ!`); } 
+                    else { alert("ไม่พบข้อมูลที่ตรงรูปแบบ กรุณาใช้คอลัมน์ 'รหัสนักศึกษา' และ 'ชื่อ-นามสกุล'"); }
+                } catch(err) { alert("เกิดข้อผิดพลาดในการอ่านไฟล์ Excel"); } document.getElementById('excelUpload').value = ''; 
+            }; reader.readAsArrayBuffer(file);
         }
-
         function exportExcel() {
             if(!isAdminAuthenticated) return;
-            const dataArray = Object.entries(studentsDB).map(([id, data]) => ({
-                "รหัสนักศึกษา": id, 
-                "ชื่อ-นามสกุล": data.name, 
-                "แผนกวิชา": data.dept, 
-                "แต้มสะสม": data.points || 0
-            }));
-            const ws = XLSX.utils.json_to_sheet(dataArray); 
-            const wb = XLSX.utils.book_new(); 
-            XLSX.utils.book_append_sheet(wb, ws, "Database"); 
-            XLSX.writeFile(wb, "SmartWaste_Students.xlsx");
+            const dataArray = Object.entries(studentsDB).map(([id, data]) => ({ "รหัสนักศึกษา": id, "ชื่อ-นามสกุล": data.name, "แผนกวิชา": data.dept, "แต้มสะสม": data.points || 0 }));
+            const ws = XLSX.utils.json_to_sheet(dataArray), wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Database"); XLSX.writeFile(wb, "SmartWaste_Students.xlsx");
         }
-        
         function saveIp() { 
             if(!isAdminAuthenticated) return;
             const newIp = document.getElementById('adminEspIp').value.trim();
             if(!isValidIPv4(newIp)) return alert("รูปแบบหมายเลข IP Address ไม่ถูกต้อง! (ตัวอย่างที่ถูกต้อง: 192.168.1.100)");
-            espIP = newIp; 
-            localStorage.setItem('swg_esp_ip', espIP); 
-            updateIpDisplay();
-            syncDB();
-            alert("บันทึกและซิงค์ IP ไปยังทุกอุปกรณ์สำเร็จ!"); 
+            espIP = newIp; localStorage.setItem('swg_esp_ip', espIP); updateIpDisplay(); syncDB(); alert("บันทึกและซิงค์ IP ไปยังทุกอุปกรณ์สำเร็จ!"); 
         }
-
         function saveApiKey() {
             if(!isAdminAuthenticated) return;
             const newKey = sanitizeStr(document.getElementById('adminApiKey').value);
             if(newKey.length < 4) return alert("API Key ต้องมีอย่างน้อย 4 ตัวอักษร");
-            espApiKey = newKey;
-            localStorage.setItem('swg_api_key', espApiKey);
-            syncDB();
-            alert("บันทึกและซิงค์ Hardware API Key สำเร็จ!");
+            espApiKey = newKey; localStorage.setItem('swg_api_key', espApiKey); syncDB(); alert("บันทึกและซิงค์ Hardware API Key สำเร็จ!");
         }
-
         async function saveAdminPassword() {
             if(!isAdminAuthenticated) return;
             const newPass = document.getElementById('newAdminPassword').value.trim();
             if(newPass.length < 6) return alert("เพื่อความปลอดภัย รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
-            adminPassHash = await sha256Hash(newPass);
-            localStorage.setItem('swg_admin_hash', adminPassHash); 
-            syncDB();
-            document.getElementById('newAdminPassword').value = ''; 
-            alert("เข้ารหัส SHA-256 และซิงค์รหัสผ่านใหม่เรียบร้อยแล้ว!"); 
+            adminPassHash = await sha256Hash(newPass); localStorage.setItem('swg_admin_hash', adminPassHash); syncDB(); document.getElementById('newAdminPassword').value = ''; alert("เข้ารหัส SHA-256 และซิงค์รหัสผ่านใหม่เรียบร้อยแล้ว!"); 
         }
     </script>
 </body>
